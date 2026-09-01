@@ -1,0 +1,5 @@
+A multi-vendor AI agent orchestration marketplace where developers create agent workflows (combining tools, prompts, models) and publish them to a central hub. End users invoke agents via API or UI, paying per-call to the platform; creators earn revenue share. The platform takes 20% of transaction value as marketplace fee.
+
+Bidirectional network effects: more creators attract more users, more users attract more creators. Differs from frontier-locked agent stores (OpenAI GPT Store, Claude Skills) by supporting any model backend (Anthropic / OpenAI / Gemini / OSS / fine-tuned). Initial focus on developer + SMB segments; enterprise as later expansion.
+
+No proprietary GPU; uses third-party model APIs as backend (0-asset architecture). Founder team has prior agent infrastructure background. Defensibility hypothesis: bidirectional network economies + creator IP switching cost. Anticipated risks: frontier vendors extending their stores to multi-vendor (Anthropic Skills moving this direction), cold-start chicken-egg before flywheel, take-rate compression if frontier stores go free.

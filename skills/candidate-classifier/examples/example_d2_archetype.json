@@ -1,0 +1,7 @@
+{
+  "primary": "Distribution",
+  "secondary": null,
+  "confidence": "robust",
+  "cn_flag": false,
+  "reasoning": "Multi-vendor agent orchestration marketplace fits Distribution archetype core features: revenue from marketplace fee on inference invocations (not training), bidirectional network economies as primary moat, no proprietary GPU or frontier model training (uses 3rd-party APIs as backend). Customer mix (developer + SMB initial, enterprise later) is consistent with Distribution archetype's typical pattern. No hardware sale, no own frontier training, no hyperscale cloud infra — rules out Hardware-vertical / Frontier-model-owner / Hyperscaler-bundle. Geographic scope is global (no CN-specific positioning), so cn_flag false. Confidence robust because all 5-dim features point to Distribution without significant cross-archetype features."
+}
