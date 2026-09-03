@@ -50,17 +50,31 @@ runtime.
 
 ### Proposal evaluation
 
+#### End-to-end workflow
+
 | Skill | What it does |
 |---|---|
 | [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
+
+#### Evaluation components
+
+| Skill | What it does |
+|---|---|
 | [`candidate-classifier`](skills/candidate-classifier/) | Produces the five-dimension candidate card, archetype, and founding year |
 | [`check-interpreter`](skills/check-interpreter/) | Builds queries, retrieves time-bounded evidence, and interprets market and moat checks |
+
+#### Validation and benchmarking
+
+| Skill | What it does |
+|---|---|
 | [`outcome-labeling`](skills/outcome-labeling/) | Maps company records to the fixed eight-label outcome ontology |
 | [`leakage-scan`](skills/leakage-scan/) | Detects post-founding outcome information in candidate cards |
 | [`cohort-sampling`](skills/cohort-sampling/) | Builds benchmark cohorts and deterministic train/validation samples |
 | [`f05-stats`](skills/f05-stats/) | Computes F0.5, Wilson intervals, and confusion-matrix statistics |
 
 ### Investor and event-chain research
+
+#### Data construction
 
 | Skill | What it does |
 |---|---|
@@ -69,6 +83,11 @@ runtime.
 | [`event-evidence-collector`](skills/event-evidence-collector/) | Collects source-grounded funding, exposure, and interface event claims |
 | [`event-chain-builder`](skills/event-chain-builder/) | Resolves claims and materializes funding, exposure, and interface events into outcome chains |
 | [`interface-identity-resolution`](skills/interface-identity-resolution/) | Resolves reviewed Interface counterparties into investor or associated identities |
+
+#### Analysis
+
+| Skill | What it does |
+|---|---|
 | [`pattern-engine`](skills/pattern-engine/) | Freezes, audits, evaluates, and registers label-blind event-chain patterns |
 | [`post-investment-behavior`](skills/post-investment-behavior/) | Derives descriptive investor behavior from temporally ordered investment evidence |
 
@@ -120,8 +139,12 @@ coverage of private company activity. Deterministic scripts validate schemas
 and fail loudly on contract violations; LLM- and web-dependent outputs still
 require source review.
 
-All `SKILL.md` files pass the Agent Skills structural validator, and all bundled
-Python files are syntax-checked before release.
+Before release, all 14 skills pass structural validation and workflow-level
+smoke tests. All 51 bundled Python files pass syntax checks, and their command
+interfaces pass CLI checks.
+Repeated schema contracts and shared helpers are hash-checked for consistency.
+Long procedures use progressive disclosure through each skill's referenced
+workflow documentation.
 
 ## License
 
