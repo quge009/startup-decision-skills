@@ -31,6 +31,11 @@ pipeline; use its component skills directly when you need one stage.
 
 ```bash
 git clone https://github.com/quge009/startup-decision-skills.git
+# Install the complete collection:
+mkdir -p ~/.claude/skills
+cp -R startup-decision-skills/skills/. ~/.claude/skills/
+
+# Or install only the proposal-evaluation workflow:
 cp -r startup-decision-skills/skills/evaluate-proposal ~/.claude/skills/
 cp -r startup-decision-skills/skills/candidate-classifier ~/.claude/skills/
 cp -r startup-decision-skills/skills/tavily-query-builder ~/.claude/skills/
@@ -89,17 +94,20 @@ for the workflows you plan to run:
 
 | Workflow | Packages |
 |---|---|
-| Evidence retrieval | Tavily CLI (`tvly`) and API access |
+| Evidence retrieval | `tavily-python`, Tavily API access, and an OpenAI-compatible endpoint |
 | Entity and chain processing | `pandas`, `pyarrow`, `pyyaml` |
 | Portfolio extraction | `pyyaml`, `beautifulsoup4`, `lxml` |
 
 ```bash
-pip install pandas pyarrow pyyaml beautifulsoup4 lxml
+pip install -r requirements.txt
 ```
 
-LLM-guided skills require a compatible agent runtime. Online evidence retrieval
-requires `TAVILY_API_KEY`; credentials must be supplied through the environment
-and must never be stored in this repository.
+LLM-guided skills require a compatible agent runtime. `check-interpreter`
+requires `TAVILY_API_KEY`. `event-evidence-collector` requires
+`OPENROUTER_API_KEY` plus `TAVILY_API_KEY`, or `SERPER_API_KEY` when selecting
+the optional Serper backend. `OPENROUTER_MODEL` and `OPENROUTER_URL` may override
+the endpoint defaults. Credentials must be supplied through the environment and
+must never be stored in this repository.
 
 ## Dataset
 

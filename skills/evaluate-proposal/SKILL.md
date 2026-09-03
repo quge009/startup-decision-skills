@@ -1,6 +1,6 @@
 ---
 name: evaluate-proposal
-description: "End-to-end orchestrator for the business-predictive-model predictive model pipeline (v1.5a). Takes a free-text business proposal description, runs the 6-step pipeline (candidate card + archetype classification → tavily queries → M-check → U-check → aggregate → reasoning), and writes per-candidate structured outputs (candidate_card.md, archetype.json, m_check.json, u_check.json, aggregate.json, reasoning.json) into the working directory. Trigger on: 'evaluate this candidate proposal', 'run predictive model pipeline', 'evaluate business proposal end-to-end'."
+description: Evaluate a business proposal through candidate classification, time-bounded market and uniqueness research, evidence interpretation, scoring, and structured reasoning. Use for an end-to-end evidence-grounded startup assessment.
 ---
 
 # Evaluate Proposal — End-to-End Pipeline Orchestrator (v1.5a)

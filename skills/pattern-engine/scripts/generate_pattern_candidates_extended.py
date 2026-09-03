@@ -702,7 +702,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         "support_policy": {"minimum_chains": args.min_chain_support, "minimum_companies": args.min_company_support,
                            "constant_pair_masks_published": False},
         "dedupe_policy": "track-local company mask; representatives cache evaluation but every pair receives a row",
-        "evaluation_contract": {"delta": 0.05, "all_tracks_evaluable": True,
+        "evaluation_contract": {"delta": "caller_supplied", "all_tracks_evaluable": True,
                                 "descriptive_causal_interpretation_allowed": False},
         "resource_limits": caps, "resource_observed": {"peak_rss_gate": "PASS_LE_MAX_RSS_MIB"},
         "counts": counts, "outputs": {},

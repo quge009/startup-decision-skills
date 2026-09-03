@@ -14,7 +14,8 @@ interfaces.
 1. Supply a company entity Parquet containing `company_id`, `canonical_name`, and
    `slug` through `--entity-path`.
 2. Set `TAVILY_API_KEY` and `OPENROUTER_API_KEY`. Optionally set
-   `OPENROUTER_MODEL`, `OPENROUTER_URL`, and `INVESTOR_BEHAVIOR_DATA_DIR`.
+   `OPENROUTER_MODEL` and `OPENROUTER_URL`. If using `--search-backend serper`,
+   set `SERPER_API_KEY` instead of the Tavily key.
 3. Run the relevant `collect_*_events.py` with `--slugs` or `--limit` and an
    explicit `--cache-dir`.
 4. Inspect source URLs and low-confidence extractions. Re-run a company with
@@ -28,5 +29,5 @@ drift, and never fabricate missing dates, amounts, parties, or outcomes.
 
 ## Requirements
 
-Python 3.10+, `pyarrow`, Tavily CLI (`tvly`), Tavily API access, and an
-OpenAI-compatible chat-completions endpoint.
+Python 3.10+, `pyarrow`, `tavily-python`, Tavily API access, and an
+OpenAI-compatible chat-completions endpoint. Serper is an optional HTTP backend.

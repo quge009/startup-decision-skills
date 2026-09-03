@@ -523,8 +523,8 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
     rows = evaluation.get("candidates")
     if not isinstance(rows, list) or evaluation.get("candidate_count") != pair_count or len(rows) != pair_count:
         raise ValueError("evaluation does not contain exactly one row per frozen candidate")
-    if evaluation.get("delta") != 0.05:
-        raise ValueError("evaluation delta must be exactly .05")
+    if not isinstance(evaluation.get("delta"), (int, float)) or not 0 < evaluation["delta"] < 1:
+        raise ValueError("evaluation delta must be between zero and one")
 
     original_counts: Counter[str] = Counter()
     retained_counts: Counter[str] = Counter()

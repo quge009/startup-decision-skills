@@ -1,6 +1,6 @@
 ---
 name: pattern-engine
-description: Freeze label-blind event-chain pattern candidates, audit grammar coverage, evaluate frozen candidates, review equivalent or uninterpretable patterns, and build an auditable registry. Use for retrospective operating-action analysis over company event chains; RECOMMEND and AVOID apply to actions, not companies.
+description: Generate, freeze, evaluate, and review label-blind event-chain patterns with an auditable registry. Use for retrospective operating-action analysis; RECOMMEND and AVOID label actions, not companies.
 ---
 
 # Pattern Engine
@@ -18,7 +18,8 @@ are written atomically.
 2. Run `audit_pattern_candidates.py coverage` against any predefined
    reference Patterns only after the freeze. This tests method coverage without
    allowing reference outcomes into generation.
-3. Run its evaluation mode with the fixed equivalence margin. Interpret
+3. Run its evaluation mode with explicit `--label-column`, success/failure
+   values, and equivalence margin. Interpret
    `RECOMMEND` and `AVOID` as labels on operating actions represented by a
    Pattern, never as company labels or predictions.
 4. Use `review_pattern_results.py` to remove invalid or
@@ -27,7 +28,8 @@ are written atomically.
    only when reproducing a pinned run.
 5. Use `build_pattern_registry.py --batch NAME=JSON ...`; supply universe
    identity, size, ordering, and reviewed batches explicitly.
-6. Run `analyze_patterns.py` for a caller-supplied Pattern specification
+6. Run `analyze_patterns.py` for a caller-supplied Pattern specification.
+   Supply entity/chain label-column names and success/failure values explicitly
    to materialize chain, company, investor, prevalence, identity-coverage, and
    run-manifest outputs.
 
@@ -37,6 +39,6 @@ three event schemas explicitly to generation commands.
 
 ## Requirements
 
-Python 3.10+ and `pyarrow`. Set `INVESTOR_BEHAVIOR_DATA_DIR` or pass every input
-path explicitly. Candidate generation must remain label-blind; evaluation begins
-only from a completed immutable freeze.
+Python 3.10+ and `pyarrow`. Pass every data path explicitly. Candidate
+generation must remain label-blind; evaluation begins only from a completed
+immutable freeze.

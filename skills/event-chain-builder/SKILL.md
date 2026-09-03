@@ -1,6 +1,6 @@
 ---
 name: event-chain-builder
-description: "Build a multi-source event timeline for a company (funding, exposure, interface) and chain events into chain:... records with schema-contract-driven Arrow typing. Use for assembling cross-source event history and outcome-level chain materialization for startup prediction / VC analysis. Trigger on: 'build event timeline', 'chain funding and exposure events', 'materialize chains v0.3'."
+description: Build schema-validated company timelines from funding, exposure, and investor-interface events, then materialize them as event chains. Use for comparable cross-source event-history research.
 ---
 
 # Event Chain Builder — multi-source company event timeline
@@ -42,10 +42,6 @@ types.
 ## Usage
 
 ```bash
-# Point DATA_ROOT / the individual paths at your data dir (defaults to
-# ~/investor-behavior-analysis).
-export INVESTOR_BEHAVIOR_DATA_DIR=/your/data/investor-behavior-analysis
-
 # Build each event family from its v0.3 collector JSON cache.
 python3 scripts/build_funding_events.py --entity-path ... --cache-dir ... --output-path ...
 python3 scripts/build_exposure_events.py --entity-path ... --cache-dir ... --output-path ...
@@ -53,17 +49,16 @@ python3 scripts/build_interface_events.py --entity-path ... --cache-dir ... --ou
 
 # Chain them into chain:... records.
 python3 scripts/build_chains.py --entity-path ... --funding-path ... \
-  --exposure-path ... --interface-path ... --output-path ...
+  --exposure-path ... --interface-path ... --output-path ... \
+  --company-label-column label --company-outcome-label-column outcome_label
 ```
 
-Every builder accepts `--entity-path`, `--cache-dir` (or the per-family source
-paths), `--output-path`, and `--force-output` overrides. `build_chains.py`
+Every builder requires `--entity-path`, `--cache-dir` (or the per-family source
+paths), and `--output-path`; `--force-output` permits intentional replacement.
+`build_chains.py`
 takes `--entity-path --funding-path --exposure-path --interface-path
---output-path`.
-
-Module-level paths default to `$INVESTOR_BEHAVIOR_DATA_DIR`
-(`$HOME/investor-behavior-analysis` if unset); set the env var or pass explicit
-`--*` flags to use a different location.
+--output-path`; label-column flags default to the released v0.3 entity contract
+but may be overridden for compatible tables.
 
 ## Requirements
 

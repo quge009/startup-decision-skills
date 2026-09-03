@@ -1,0 +1,6 @@
+beautifulsoup4
+lxml
+pandas
+pyarrow==25.0.0
+PyYAML
+tavily-python

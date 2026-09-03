@@ -1,6 +1,6 @@
 ---
 name: portfolio-edge-builder
-description: Build auditable investor-to-company portfolio edges from cached public portfolio-page HTML by authoring and validating per-site CSS selectors, extracting per-firm Parquet tables, checking quality, and merging them under a common schema. Use for public portfolio reconstruction; do not use for sites whose content is unavailable in the supplied HTML.
+description: Build auditable investor-to-company portfolio edges from cached public portfolio pages using validated site selectors and a common schema. Use for reproducible public portfolio reconstruction.
 ---
 
 # Portfolio Edge Builder

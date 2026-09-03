@@ -1,6 +1,6 @@
 ---
 name: candidate-classifier
-description: "Generate candidate card 5-dim summary + archetype classification + founding year from a free-text business proposal description. Implements Step 1a (candidate card generation, LLM-based) + Step 1b (archetype classification, LLM-based) of the business-predictive-model v1.5 pipeline. Trigger on: 'classify candidate proposal', 'generate candidate card', 'archetype this proposal', 'evaluate candidate archetype'."
+description: Generate a structured candidate card, founding year, and business archetype from a free-text proposal. Use to prepare a proposal for evidence-grounded market and uniqueness assessment.
 ---
 
 # Candidate Classifier (v1.5)

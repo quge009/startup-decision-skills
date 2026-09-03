@@ -1,6 +1,6 @@
 ---
 name: entity-dedup
-description: "Deduplicate company and investor entity names into canonical entities with stable IDs using deterministic normalization and evidence-based equivalence rules. Use for canonical company or investor entity merging in VC and startup research; optional project-specific alias and universe files must be supplied explicitly."
+description: Deduplicate company and investor names into canonical entities with stable IDs, deterministic normalization, and evidence-based equivalence rules. Use for entity merging in startup and investment research.
 ---
 
 # Entity Dedup — Canonical company & investor entity keys
@@ -40,10 +40,10 @@ python3 scripts/build_company_entity.py --edges-dir <dir> --out <path> \
   --manual-aliases <aliases.yaml>
 ```
 
-| Flag | Default | Meaning |
+| Flag | Requirement | Meaning |
 |---|---|---|
-| `--edges-dir` | `~/investor-behavior-analysis/extracted/edges_by_source` (or `$INVESTOR_BEHAVIOR_DATA_DIR/extracted/edges_by_source`) | Directory of `*_v0.2.parquet` edges files |
-| `--out` | `~/investor-behavior-analysis/companies_entity_v0.2.parquet` (or `$INVESTOR_BEHAVIOR_DATA_DIR/companies_entity_v0.2.parquet`) | Output parquet path |
+| `--edges-dir` | required | Directory of per-source edge Parquets |
+| `--out` | required | Output Parquet path |
 | `--manual-aliases` | none | Optional project-specific canonical-name and alias YAML |
 
 ## Investor merge pipeline (`merge_investors.py`)
@@ -74,9 +74,9 @@ python3 scripts/merge_investors.py --out-dir <dir>
 python3 scripts/merge_investors.py --out-dir <dir> --universe <universe.yaml>
 ```
 
-| Flag | Default | Meaning |
+| Flag | Requirement | Meaning |
 |---|---|---|
-| `--out-dir` | `~/investor-behavior-analysis` (or `$INVESTOR_BEHAVIOR_DATA_DIR`) | Root output dir; reads `extracted/investors_by_source/*_v0.1.parquet` from here |
+| `--out-dir` | required | Root output directory; reads `extracted/investors_by_source/` below it |
 | `--universe` | none | Optional row-count corridor and expected-name sanity-check YAML |
 
 ## Investor ID lookup map (`_common.py`)
@@ -85,11 +85,12 @@ python3 scripts/merge_investors.py --out-dir <dir> --universe <universe.yaml>
 `{make_slug(name): investor_id}` — the shared lookup so downstream ingest
 scripts reuse the canonical `investor_id` instead of generating their own.
 
-| Env var | Default | Used by |
+All command inputs and outputs are passed explicitly. The shared lookup helper
+uses one environment variable:
+
+| Environment variable | Requirement | Used by |
 |---|---|---|
-All input and output paths are passed explicitly. `INVESTOR_ENTITY_PATH` is
-required only by helpers that resolve canonical investor IDs.
-| `INVESTOR_ENTITY_PATH` | `~/investor-behavior-analysis/investors_entity_v0.3.parquet` | `_common.py` `load_investor_id_map()` |
+| `INVESTOR_ENTITY_PATH` | Required when using the lookup helper | `_common.py` `load_investor_id_map()` |
 
 The normalizers live in `_common.py`: `make_slug` (accent-transliterating,
 CJK-preserving), `normalize_name` (16-token trailing strip list for investor

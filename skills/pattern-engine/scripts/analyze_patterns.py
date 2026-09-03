@@ -347,7 +347,7 @@ def validate_pattern_config(payload: Any, path: Path) -> PatternSet:
         )
         track = definition.get("track")
         if track is not None and track not in {"ACTION_ELIGIBLE", "DESCRIPTIVE_ASSOCIATION"}:
-            raise ValueError(f"{item_path}.track: invalid Batch3 track {track!r}")
+            raise ValueError(f"{item_path}.track: invalid Pattern track {track!r}")
         pattern_id = _nonempty_string(definition["id"], f"{item_path}.id")
         if not PATTERN_ID_RE.fullmatch(pattern_id):
             raise ValueError(f"{item_path}.id: invalid Pattern ID {pattern_id!r}")
@@ -1319,6 +1319,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--interface-path", required=True)
     parser.add_argument("--chain-path", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--entity-label-column", required=True)
+    parser.add_argument("--chain-label-column", required=True)
+    parser.add_argument("--success-label", default="SUCCESS")
+    parser.add_argument("--failure-label", default="FAILURE")
     parser.add_argument(
         "--pattern-spec-path", "--pattern-config", dest="pattern_spec_path",
         required=True,
@@ -1436,12 +1440,12 @@ def main() -> None:
         raise SystemExit(f"refusing to overwrite existing output directory: {output_dir}")
 
     tables = {name: pq.read_table(path) for name, path in paths.items()}
-    require_columns(tables["entity"], {"company_id", "company_canonical_name", "label_v4"}, paths["entity"])
+    require_columns(tables["entity"], {"company_id", "company_canonical_name", args.entity_label_column}, paths["entity"])
     require_columns(tables["investor"], {"investor_id", "name", "investor_type"}, paths["investor"])
     require_columns(tables["exposure"], {"event_id", "company_id", "event_date", "event_type", "event_subtype"}, paths["exposure"])
     require_columns(tables["interface"], {"event_id", "company_id", "investor_id", "raw_investor_name", "event_date", "event_type", "event_subtype"}, paths["interface"])
     require_columns(tables["chains"], {
-        "chain_id", "company_id", "company_label_v4", "chain_sequence",
+        "chain_id", "company_id", args.chain_label_column, "chain_sequence",
         "chain_start_date", "chain_start_reason", "chain_end_date", "chain_window_status",
         "outcome_type", "outcome_round", "outcome_event_ids", "n_participant_rows",
         "investor_ids", "investor_raw_names", "n_exposure", "exposure_event_ids",
@@ -1449,6 +1453,16 @@ def main() -> None:
     }, paths["chains"])
 
     rows = {name: table.to_pylist() for name, table in tables.items()}
+    def canonical_label(value: Any) -> str:
+        if str(value) == args.success_label:
+            return "SUCCESS"
+        if str(value) == args.failure_label:
+            return "FAILURE"
+        return str(value)
+    for row in rows["entity"]:
+        row["label_v4"] = canonical_label(row[args.entity_label_column])
+    for row in rows["chains"]:
+        row["company_label_v4"] = canonical_label(row[args.chain_label_column])
     if len({row["chain_id"] for row in rows["chains"]}) != len(rows["chains"]):
         raise SystemExit("duplicate chain_id in chain input")
     event_lookup = build_event_lookup(rows["exposure"], rows["interface"])

@@ -63,7 +63,8 @@ def load_freeze(freeze_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
     return manifest, lattice, frozen
 
 
-def read_contexts(manifest: dict[str, Any], *, with_labels: bool) -> tuple[list[engine.ChainRuleContext], list[str], list[str | None]]:
+def read_contexts(manifest: dict[str, Any], *, with_labels: bool,
+                  label_field: str | None = None) -> tuple[list[engine.ChainRuleContext], list[str], list[str | None]]:
     paths = {name: Path(item["path"]) for name, item in manifest["inputs"].items()}
     is_extended = manifest.get("generation_version") == "extended_v1"
     source = extended_generator if is_extended else generator
@@ -76,8 +77,9 @@ def read_contexts(manifest: dict[str, Any], *, with_labels: bool) -> tuple[list[
         if actual != manifest["inputs"][name]["sha256"]:
             raise ValueError(f"post-freeze input hash drift for {name}: {actual}")
     chain_columns = list(source.SAFE_CHAIN_COLUMNS if is_extended else source.CHAIN_COLUMNS)
-    label_field = "company_label_v4"
     if with_labels:
+        if not label_field:
+            raise ValueError("label field is required for evaluation")
         chain_columns.append(label_field)
     chains = pq.read_table(paths["chains"], columns=chain_columns).to_pylist()
     exposure_columns = source.SAFE_EXPOSURE_COLUMNS if is_extended else source.EXPOSURE_COLUMNS
@@ -211,7 +213,10 @@ def coverage(args: argparse.Namespace) -> dict[str, Any]:
     result = {
         "audit_version": "v0.1", "mode": "POST_FREEZE_REFERENCE_COVERAGE",
         "freeze_dir": str(freeze_dir.expanduser().resolve()),
-        "freeze_manifest_sha256": engine.sha256_file(freeze_dir / "generation_manifest_v0.1.json"),
+        "freeze_manifest_sha256": engine.sha256_file(
+            freeze_dir / ("generation_manifest.json" if manifest.get("generation_version") == "extended_v1"
+                          else "generation_manifest_v0.1.json")
+        ),
         "reference_config": {"path": str(reference_path), "sha256": reference.sha256},
         "criterion": "exact equality of Chain mask and dated/evaluable-company-any mask",
         "result": "PASS" if all_pass else "FAIL", "patterns": rows,
@@ -244,14 +249,14 @@ def coverage_markdown(result: dict[str, Any]) -> str:
 
 
 def evaluate(args: argparse.Namespace) -> dict[str, Any]:
-    if abs(float(args.delta) - 0.05) > 1e-12:
-        raise ValueError("Batch3 evaluation requires --delta .05")
     freeze_dir = Path(args.freeze_dir).expanduser().resolve()
     manifest, lattice, frozen = load_freeze(freeze_dir)
     pair_metadata = {item["id"]: item for item in lattice["pairs"]}
     if manifest.get("generation_version") != "extended_v1":
-        raise ValueError("evaluate is reserved for the Batch3 explicit pair freeze")
-    contexts, companies, labels = read_contexts(manifest, with_labels=True)
+        raise ValueError("evaluate requires an extended explicit-pair freeze")
+    contexts, companies, labels = read_contexts(
+        manifest, with_labels=True, label_field=args.label_column
+    )
     company_labels: dict[str, str] = {}
     observable = set()
     for company, label, context in zip(companies, labels, contexts):
@@ -260,9 +265,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         company_labels[company] = str(label)
         if context.chain["chain_window_status"] == "dated":
             observable.add(company)
-    cohort = sorted(company for company in observable if company_labels[company] in {"SUCCESS", "FAILURE"})
+    cohort = sorted(company for company in observable
+                    if company_labels[company] in {args.success_label, args.failure_label})
     cohort_set = set(cohort)
-    success_total = sum(company_labels[company] == "SUCCESS" for company in cohort)
+    success_total = sum(company_labels[company] == args.success_label for company in cohort)
     failure_total = len(cohort) - success_total
     representative_payload = _load_json(freeze_dir / "candidate_representatives.json")
     candidate_to_rep = representative_payload["candidate_to_representative"]
@@ -276,7 +282,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             company for index, (company, context) in enumerate(zip(companies, contexts))
             if context.chain["chain_window_status"] == "dated" and chain_bits & (1 << index)
         } & cohort_set
-        st = sum(company_labels[company] == "SUCCESS" for company in taking)
+        st = sum(company_labels[company] == args.success_label for company in taking)
         ft = len(taking) - st
         sn, fn = success_total - st, failure_total - ft
         base: dict[str, Any] = {
@@ -285,7 +291,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "not_taking_success": sn, "not_taking_failure": fn, "not_taking_total": len(cohort) - len(taking),
         }
         if base["status"] == "EVALUATED":
-            base.update(engine.action_value_metrics(st, ft, sn, fn, 0.05))
+            base.update(engine.action_value_metrics(st, ft, sn, fn, args.delta))
         metrics_by_rep[representative_id] = base
     rows = []
     for definition in frozen["patterns"]:
@@ -313,13 +319,15 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             row["causal_interpretation_allowed"] = True
         rows.append(row)
     if len(rows) != len(frozen["patterns"]) or len({row["candidate_id"] for row in rows}) != len(rows):
-        raise AssertionError("every frozen Batch3 pair must receive exactly one evaluation row")
+        raise AssertionError("every frozen extended pair must receive exactly one evaluation row")
     result_counts = Counter(row.get("result") or row["status"] for row in rows)
     result = {
         "evaluation_version": "extended_v1", "mode": "POST_FREEZE_LABELLED_TWO_TRACK_EVALUATION",
-        "delta": 0.05, "statistics_algorithm": "two_proportion_chi_square_plus_TOST_v1",
+        "delta": args.delta, "statistics_algorithm": "two_proportion_chi_square_plus_TOST_v1",
         "candidate_count": len(rows), "representative_computations": len(metrics_by_rep),
-        "observable_cohort": {"SUCCESS": success_total, "FAILURE": failure_total},
+        "label_contract": {"column": args.label_column, "success": args.success_label,
+                           "failure": args.failure_label},
+        "observable_cohort": {args.success_label: success_total, args.failure_label: failure_total},
         "result_counts": dict(sorted(result_counts.items())), "candidates": rows,
     }
     write_result(result, Path(args.output), None)
@@ -357,6 +365,9 @@ def parser() -> argparse.ArgumentParser:
     scoring = sub.add_parser("evaluate", help="evaluate eager frozen candidates using labels after freeze")
     scoring.add_argument("--freeze-dir", required=True)
     scoring.add_argument("--delta", type=float, default=0.05)
+    scoring.add_argument("--label-column", required=True)
+    scoring.add_argument("--success-label", default="SUCCESS")
+    scoring.add_argument("--failure-label", default="FAILURE")
     scoring.add_argument("--output", required=True)
     return result
 

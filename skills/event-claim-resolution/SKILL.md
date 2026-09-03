@@ -1,6 +1,6 @@
 ---
 name: event-claim-resolution
-description: "Resolve a multi-source event claim set into a single canonical event record: pick the highest-confidence normalized canonical value per field, retain all raw claims for audit, and detect / report semantic conflicts across sources. Pure stdlib. Use for deduplicating or merging events (funding rounds, exposures, interactions) observed by multiple data sources. Trigger on: 'resolve event claims', 'merge multi-source events', 'event canonicalization'."
+description: Resolve multi-source event claims into canonical records while retaining raw evidence and reporting semantic conflicts. Use for deduplicating funding, exposure, or interface events observed by multiple sources.
 ---
 
 # Event Claim Resolution — multi-source event canonicalization

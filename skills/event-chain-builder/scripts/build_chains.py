@@ -86,6 +86,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--exposure-path", required=True)
     ap.add_argument("--interface-path", required=True)
     ap.add_argument("--output-path", required=True)
+    ap.add_argument("--company-label-column", default="label_v4")
+    ap.add_argument("--company-outcome-label-column", default="outcome_label_v4")
     ap.add_argument("--force-output", action="store_true")
     return ap.parse_args()
 
@@ -112,7 +114,8 @@ def main() -> None:
     interface = pq.read_table(interface_path).to_pandas()
 
     _require_columns(entity, {
-        "company_id", "company_canonical_name", "label_v4", "outcome_label_v4",
+        "company_id", "company_canonical_name", args.company_label_column,
+        args.company_outcome_label_column,
     }, entity_path)
     _require_columns(funding, {
         "event_id", "company_id", "investor_id", "raw_investor_name",
@@ -195,8 +198,8 @@ def main() -> None:
                 ),
                 "company_id": company_id,
                 "company_canonical_name": str(company["company_canonical_name"]),
-                "company_label_v4": str(company["label_v4"]),
-                "company_outcome_label_v4": str(company["outcome_label_v4"]),
+                "company_label_v4": str(company[args.company_label_column]),
+                "company_outcome_label_v4": str(company[args.company_outcome_label_column]),
                 "chain_sequence": sequence,
                 "chain_start_date": start_date,
                 "chain_start_reason": start_reason,

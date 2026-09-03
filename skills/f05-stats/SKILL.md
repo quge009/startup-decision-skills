@@ -1,6 +1,6 @@
 ---
 name: f05-stats
-description: "Compute F0.5 (precision-weighted F-measure), Wilson 95% confidence intervals, confusion-matrix cell statistics, and per-class breakdowns for binary classification results such as startup-success prediction. Pure stdlib + argparse, reads a results CSV and reports F0.5 with confidence bands. Use for calibration metrics, leaderboard scoring, model-comparison reporting. Trigger on: 'compute F0.5', 'Wilson CI', 'precision recall F0.5'."
+description: Compute F0.5, Wilson confidence intervals, confusion-matrix statistics, and per-class breakdowns from binary evaluation results. Use for precision-weighted calibration and model-comparison reporting.
 ---
 
 # F0.5 Stats — precision-weighted calibration metrics

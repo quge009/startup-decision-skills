@@ -1,6 +1,6 @@
 ---
 name: outcome-labeling
-description: "Map a Crunchbase / opensporks company row to a deterministic 8-label outcome taxonomy (POSITIVE_IPO / POSITIVE_LATE_STAGE_FUNDED / POSITIVE_ACQUIRED / EQUIVOCAL_DELISTED / NEGATIVE_CLOSED / NEGATIVE_NO_TRACTION / INDETERMINATE / UNKNOWN), plus the verdict-to-truth bridge that maps a (verdict, outcome_label) pair into evaluation cells (TP/FP/TN/FN/FILTER_*). Pure stdlib, self-testing. Use for outcome ground-truthing in startup-prediction / VC calibration work. Trigger on: 'label a Crunchbase row outcome', 'compute outcome label', 'outcome truth labeling'."
+description: Map company records to a deterministic eight-label outcome taxonomy and convert verdict/outcome pairs into evaluation cells. Use for outcome ground-truthing and calibration analysis.
 ---
 
 # Outcome Labeling — Crunchbase outcome ground truth

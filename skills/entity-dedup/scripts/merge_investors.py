@@ -30,7 +30,6 @@ from _common import SOURCE_CONFIDENCE, SOURCE_PRIORITY, INVESTOR_TYPE_ENUM
 # Constants
 # ─────────────────────────────────────────────────────────────────────────
 
-DEFAULT_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")))
 SOURCES = ("findfunding", "wikidata", "manual_seed", "url_verify")
 # `url_verify` is the W9b (2026-07-28) URL全库验证 pass — optional at merge time
 # (missing parquet is skipped with a warning; other sources are required).
