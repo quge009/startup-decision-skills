@@ -44,8 +44,8 @@ def load_freeze(freeze_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
         lattice_path = freeze_dir / "candidate_pairs.json"
         frozen_path = freeze_dir / "pattern_candidates_extended_frozen.json"
     else:
-        manifest_path = freeze_dir / "generation_manifest_v0.1.json"
-        lattice_path = freeze_dir / "candidate_lattice_v0.1.json"
+        manifest_path = freeze_dir / "generation_manifest.json"
+        lattice_path = freeze_dir / "candidate_lattice.json"
         frozen_path = freeze_dir / "pattern_candidates_frozen.json"
     manifest, lattice, frozen = map(_load_json, (manifest_path, lattice_path, frozen_path))
     for name, metadata in manifest.get("outputs", {}).items():
@@ -211,11 +211,11 @@ def coverage(args: argparse.Namespace) -> dict[str, Any]:
         all_pass &= status == "RECOVERED_EXACT"
         rows.append(row)
     result = {
-        "audit_version": "v0.1", "mode": "POST_FREEZE_REFERENCE_COVERAGE",
+        "audit_contract": "pattern-coverage-audit-v1", "mode": "POST_FREEZE_REFERENCE_COVERAGE",
         "freeze_dir": str(freeze_dir.expanduser().resolve()),
         "freeze_manifest_sha256": engine.sha256_file(
             freeze_dir / ("generation_manifest.json" if manifest.get("generation_version") == "extended_v1"
-                          else "generation_manifest_v0.1.json")
+                          else "generation_manifest.json")
         ),
         "reference_config": {"path": str(reference_path), "sha256": reference.sha256},
         "criterion": "exact equality of Chain mask and dated/evaluable-company-any mask",

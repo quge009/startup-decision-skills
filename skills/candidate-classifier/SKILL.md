@@ -7,8 +7,7 @@ description: Generate a structured candidate card, founding year, and business a
 
 You generate a structured candidate card (5-dim) plus an archetype
 classification + a founding year from a free-text business proposal
-description. This is Step 1a + Step 1b of the business-predictive-model
-v1.5 pipeline.
+description. This supplies the candidate representation used by the evaluation pipeline.
 
 ## v1.5 changes (vs v1.4)
 

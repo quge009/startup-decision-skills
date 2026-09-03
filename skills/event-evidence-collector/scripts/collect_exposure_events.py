@@ -8,15 +8,13 @@ the exposure-event builder separately for that.
 Splitting collect from build means:
   - Re-collecting one company won't touch the other companies' cache files.
   - Rebuilding the parquet doesn't need the network.
-  - An accident that clears a subset of the cache no longer causes the parquet
-    to shrink to that subset (funding_events_v0.2.parquet lost 1,341 rows on
-    2026-08-12 for exactly this reason).
+  - An incomplete cache cannot silently replace a previously complete table.
 
 Usage:
     export TAVILY_API_KEY=...
     export OPENROUTER_API_KEY=...
     python3 scripts/collect_exposure_events.py \\
-        --slugs cerebras-systems-inc,sambanova-systems,lightmatter,graphcore,syntiant \\
+        --slugs company-a,company-b \\
         [--force]
 """
 

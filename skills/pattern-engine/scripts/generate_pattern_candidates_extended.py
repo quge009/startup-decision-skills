@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze the complete explicit Batch-3 typed-event × structural grammar.
+"""Freeze the complete explicit typed-event × structural grammar.
 
 Generation is label blind: it opens only three explicitly supplied v0.3 tables,
 projects the SAFE_* columns below, validates the three checked-in contracts, and
@@ -44,13 +44,12 @@ SAFE_CHAIN_COLUMNS = (
 )
 SAFE_EXPOSURE_COLUMNS = ("event_id", "company_id", "event_date", "event_type")
 SAFE_INTERFACE_COLUMNS = SAFE_EXPOSURE_COLUMNS + ("investor_id", "raw_investor_name")
-FORBIDDEN_CHAIN_COLUMNS = ("company_label_v4", "company_outcome_label_v4", "label_v4")
 FORBIDDEN_EVENT_COLUMNS = (
     "event_subtype", "title", "summary", "source_url", "metadata_json", "confidence", "source_type",
 )
 FORBIDDEN_INPUT_KINDS = (
-    "entity/cohort tables", "P1-P8 reference patterns/configuration/coverage",
-    "Batch2 or prior candidate/freeze/evaluation/report artifacts",
+    "entity/cohort tables", "predefined reference patterns, configuration, or coverage",
+    "prior candidate, freeze, evaluation, or report artifacts",
     "ATE, p-value, recommendation, or outcome-label results",
 )
 THRESHOLD_REGISTRY = {
@@ -693,7 +692,8 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         "isolation_contract": {
             "generation_reads_outcome_labels": False, "generation_reads_reference_patterns": False,
             "generation_reads_prior_candidate_or_evaluation_results": False,
-            "projected_columns": projections, "forbidden_chain_columns": list(FORBIDDEN_CHAIN_COLUMNS),
+            "projected_columns": projections,
+            "label_exclusion_rule": "only explicitly enumerated SAFE columns are projected",
             "forbidden_event_columns": list(FORBIDDEN_EVENT_COLUMNS), "forbidden_input_kinds": list(FORBIDDEN_INPUT_KINDS),
             "identity_fields_are_participant_equality_only": True,
             "cli_has_no_entity_reference_pattern_or_evaluation_option": True,

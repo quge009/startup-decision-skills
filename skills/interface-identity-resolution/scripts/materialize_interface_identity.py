@@ -26,7 +26,6 @@ RESEARCH_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from apply_interface_name_recovery import source_row_sha256  # noqa:E402
 
-PACKAGE_DEFAULT = RESEARCH_ROOT / "overlays/interface_counterparty_identity/v1"
 TMP_ROOT = Path("/tmp")
 REQUIRED_PYARROW_VERSION = "25.0.0"
 STATUSES = {"EXISTING_INVESTOR", "NEW_INVESTOR", "ASSOCIATED_ENTITY", "AMBIGUOUS", "UNRESOLVED"}
@@ -301,7 +300,7 @@ def _validate_dedup(rows: list[dict[str, Any]], new_start: int) -> None:
         "name": {_exact_name(x["name"]) for x in base if x.get("name")},
     }
     # Duplicates frozen inside the authoritative base are tolerated. Newly
-    # adjudicated rows are checked only against authoritative v0.2 keys and one
+    # Adjudicated rows are checked only against the supplied base keys and one
     # another; the legacy mapping aid is not entity/adjudication evidence.
     for field, key in (("wikidata_qid", lambda x: x), ("name", _exact_name)):
         seen: dict[str, str] = {}
@@ -359,17 +358,17 @@ def materialize(args: argparse.Namespace) -> dict[str, Any]:
 
     required_existing = {x["investor_id"] for x in interface_rows if x["counterparty_resolution_status"] == "EXISTING_INVESTOR"}
     if not required_existing <= base_ids:
-        raise ValueError(f"published existing IDs absent from authoritative v0.2 base: {sorted(required_existing-base_ids)}")
+        raise ValueError(f"published existing IDs absent from supplied investor base: {sorted(required_existing-base_ids)}")
 
     # The legacy entity snapshot is a pinned mapping aid only. Never append its
-    # rows: v0.3 is exactly the authoritative v0.2 base plus package additions.
+    # The materialized entity is exactly the supplied base plus package additions.
     legacy_remap = _legacy_to_base_mapping(base_rows, legacy.to_pylist())
     entity_rows = [*base_rows, *package["new_investors_entity"]]
     _validate_dedup(entity_rows, investors.num_rows)
     investor_ids = {x["investor_id"] for x in entity_rows}
     expected_entity_rows = investors.num_rows + len(package["new_investors_entity"])
     if len(entity_rows) != expected_entity_rows:
-        raise ValueError(f"investor v0.3 must contain exactly {expected_entity_rows} rows; found {len(entity_rows)}")
+        raise ValueError(f"materialized investor entity must contain exactly {expected_entity_rows} rows; found {len(entity_rows)}")
     if not {x["investor_id"] for x in interface_rows if x["investor_id"]} <= investor_ids:
         raise ValueError("Interface investor FK failure")
 

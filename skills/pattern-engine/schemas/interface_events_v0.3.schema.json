@@ -1,6 +1,6 @@
 {
   "format": "pyarrow-schema-json-v1",
-  "table": "interface_events_chip_v0.3.parquet",
+  "table": "interface_events_v0.3.parquet",
   "event_family": "interface",
   "schema_version": "v0.3.0",
   "fields": [
@@ -85,7 +85,7 @@
     "company_entity"
   ],
   "metadata": {
-    "company_entity": "companies_chip_subset_entity_v0.3.parquet",
+    "company_entity": "companies_entity_v0.3.parquet",
     "schema_version": "v0.3.0"
   },
   "event_type_enum": [

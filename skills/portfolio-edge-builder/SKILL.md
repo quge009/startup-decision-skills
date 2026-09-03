@@ -27,7 +27,11 @@ company that is absent from the supplied page.
    systematically null optional fields.
 6. Run `scripts/build_edges_long.py --investors ...` to merge accepted source
    tables and verify uniqueness, investor foreign keys, and row-count
-   reconciliation.
+reconciliation.
+
+Pass `--data-root` to all three processing commands. Also pass `--out` to
+`spot_check_edges.py`; released scripts never infer a local project directory
+or write into the installed skill.
 
 Read `schemas/edges_long_v0.1.spec.md` before changing fields or types. All
 project-specific firm lists, selector YAMLs, HTML caches, and output directories

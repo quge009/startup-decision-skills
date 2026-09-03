@@ -16,16 +16,12 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import os
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
-
-DEFAULT_IBA_DATA = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
 
 
 def load_all_per_firm(root: Path) -> list[tuple[str, pa.Table]]:
@@ -95,7 +91,7 @@ def write_coverage_report(
     out_path: Path,
     run_date: dt.date,
 ) -> None:
-    """Emit step2_coverage_v0.1.md — high-level coverage + per-firm + field completeness + co-invest."""
+    """Emit high-level coverage, per-firm, field-completeness, and co-investment results."""
     n = merged.num_rows
     df = merged.to_pandas()
 
@@ -186,7 +182,8 @@ def write_coverage_report(
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--data-root", default=str(DEFAULT_IBA_DATA))
+    ap.add_argument("--data-root", required=True,
+                    help="Root containing extracted/edges_by_source")
     ap.add_argument("--investors", required=True,
                     help="Canonical investor entity Parquet used for FK validation")
     ap.add_argument("--output", help="Merged Parquet path (default: DATA_ROOT/edges_long_v0.1.parquet)")

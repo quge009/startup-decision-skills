@@ -23,7 +23,7 @@
     {"name":"counterparty_resolution_status","type":"large_string","nullable":false}
   ],
   "metadata_order":["schema_version","company_entity","investor_entity","associated_entity"],
-  "metadata":{"schema_version":"v0.4.0","company_entity":"companies_chip_subset_entity_v0.3.parquet","investor_entity":"investors_entity_v0.3.parquet","associated_entity":"associated_entity_v0.1.parquet"},
+  "metadata":{"schema_version":"v0.4.0","company_entity":"companies_entity_v0.3.parquet","investor_entity":"investors_entity_v0.3.parquet","associated_entity":"associated_entity_v0.1.parquet"},
   "event_type_enum":["activist_action","board_change","exit","funding_participation","major_holder_change","other","secondary_transaction","service_provider","strategic_investment"],
   "event_type_definitions":{
     "activist_action":"An activist campaign, proxy contest, governance demand, or comparable investor action.",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Merge per-source parquets into canonical entity + provenance tables.
 
-W8 deliverable. Reads the 3 per-source extracted parquets from W5/W6/W7,
+Reads caller-supplied per-source extracted Parquets,
 deduplicates firms via three-way equivalence (wikidata_qid, domain,
 normalized_name + location_state overlap), computes canonical field
 values per equivalence class, emits a long-format provenance table,

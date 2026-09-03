@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M2-Step-6: Build company entity table from edges.
+"""Build a company entity table from portfolio edges.
 
 Traverses all edges_by_source parquet files, deduplicates company names
 (via company_normalized_name), assigns sequential company_id in format

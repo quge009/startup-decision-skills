@@ -1,4 +1,4 @@
-"""Shared helpers for W5-W7 ingest scripts and W8 merge.
+"""Shared entity-normalization and provenance helpers.
 
 All three per-source ingest scripts (findfunding / wikidata / manual_seed)
 apply the same normalization pipeline to their entity fields so that the
@@ -6,9 +6,7 @@ downstream merge step can compare them apples-to-apples. This module
 holds the normalizers plus the confidence-defaults table from the
 provenance spec.
 
-The normalizers implement the rules stated in
-schemas/investors_entity_v0.1.spec.md — treat this file as executable
-spec; if a rule changes in the spec, change it here first.
+Keep these normalizers synchronized with the schema contract used by the caller.
 """
 
 from __future__ import annotations
@@ -56,7 +54,7 @@ def make_slug(name: str, max_len: int = 50) -> str:
 # 16-token trailing strip list. Order-insensitive, matched case-insensitively.
 # Applied greedily until no further trailing token matches — so
 # "Sequoia Capital Partners" → "sequoia" (Partners then Capital both strip).
-# Extended 2026-07-30 (W20 v3): added corp / co / corporation / company to
+# Includes corp, co, corporation, and company in
 # harmonize investors_entity / edges_long / form_d_index normalization,
 # closing the gap where "Ramp Business Corp" / "Coinbase Global, Inc." /
 # "Okta Corp" style operating-company Form D issuer names failed tier-1
@@ -140,9 +138,9 @@ def normalize_website(raw: str) -> str | None:
     return f"{scheme}://{netloc}{path}{tail}"
 
 
-# Minimal public-suffix table for the common TLDs seen in v0.1 sources.
+# Minimal public-suffix table for common source domains.
 # NOT a full PSL implementation — for that we'd need the `tldextract`
-# package. For MVP the 3 sources produce almost exclusively .com / .co /
+# package. The supported sources commonly produce .com / .co /
 # .vc / .org / .io / .ai / .net / .fund domains, so this simple list
 # handles the common cases. Two-part suffixes (co.uk etc.) are unusual
 # in US VC context; if they appear, extract_domain falls back to the
@@ -322,14 +320,11 @@ SOURCE_CONFIDENCE = {
     ("findfunding", "structured"): 0.90,
     ("findfunding", "implicit_type"): 0.85,  # institutional_vc from site scope
     ("findfunding", "text_extracted"): 0.60,
-    # manual_seed lowered from 1.00 → 0.80 on 2026-07-28 (W8 pre-implementation).
-    # Reason: v0.1 seed is AI-drafted from Claude's Jan-2026 training data with
-    # E-policy manual patches for 8 real errors, not truly human-verified.
-    # Uniform 1.00 overstated authority relative to Wikidata's community-maintained
-    # structured properties. See _PROGRESS.md → W8 pre-implementation revision.
+    # Curated seed values are not independently verified, so their confidence
+    # remains below community-maintained structured properties.
     ("manual_seed", "curator"): 0.80,
     ("manual_seed", "qid_cross_ref"): 0.80,
-    # url_verify (W9b, opened 2026-07-28): Step-1 URL 全库验证 pass. curl_verified
+    # url_verify: curl_verified
     # means one of the existing sources' URLs curl-succeeded when canonical did not
     # (provenance-fallback). tavily_verified means all curl attempts on existing-source
     # URLs failed and Tavily search + double-verify (domain contains normalized_name
@@ -353,7 +348,7 @@ SOURCE_PRIORITY = {"wikidata": 0, "findfunding": 1, "manual_seed": 2, "url_verif
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Investor ID lookup (M2-Step-6: canonical investor_id from entity table)
+# Investor ID lookup from the canonical entity table
 # ─────────────────────────────────────────────────────────────────────────
 
 _ENTITY_PATH = os.environ.get("INVESTOR_ENTITY_PATH")

@@ -1,24 +1,15 @@
 """Filter a source company table into a bounded research cohort.
 
-Streams full opensporks/Crunchbase 2.87M rows and emits cohort_v2.csv
-applying ONLY Tier 1 (AI category match — allow-list OR reverse-keyword
-recall) and Tier 3 (founded 2010-2026). Per charter v5 §1 Task A and
-§0.7, the v1 Tier 2 (funding stage) and Tier 4 (description length) and
-Tier 5 (outcome != AMBIGUOUS) filters are DROPPED — outcome
-classification is moved to a separate label-mapping step
-(`outcome_label.outcome_label_mapping`) that assigns every row one of
-8 outcome labels including INDETERMINATE / UNKNOWN, used as ground
-truth in A5/A6 calibration.
+Streams source CSV chunks and applies a caller-supplied category allow-list,
+an optional reverse-recall description regex, and a founding-year window.
+Outcome classification remains a separate deterministic mapping applied to
+every selected row.
 
 Output schema: id, name, website, short_description, categories,
 founded_on, plus all raw fields used by outcome_label_mapping
 (operating_status, ipo_status, last_funding_type, last_funding_at,
 growth_insight_description, locations, permalink, url) plus the
 computed outcome_label.
-
-Estimated output: ~57k rows (per A1.0 distribution probe — 45,484
-rows match Tier 1 AI category allow-list + ~25 reverse-recall rows;
-Tier 3 founded 2010-2026 keeps the bulk).
 
 Input directory, filename pattern, output path, and founding-year bounds are
 explicit command-line arguments.
@@ -36,34 +27,7 @@ from outcome_label import outcome_label_mapping, VALID_LABELS
 
 csv.field_size_limit(sys.maxsize)
 
-# Tier 1 — AI category allow-list, locked in A1.5 final spec
-# (charter v5 §0.4 + post-A1.4 audit). Robotics / Predictive Analytics /
-# Speech Recognition were dropped after sample verification (audit
-# showed 0% in-scope rate).
-AI_CATEGORIES_ALLOW = frozenset({
-    "Artificial Intelligence (AI)",
-    "Machine Learning",
-    "Generative AI",
-    "GPU",                          # 37% in-scope rate per A1.4 audit
-    "Natural Language Processing",
-    "Computer Vision",
-})
-
-# Tier 1 — reverse recall regex on short_description for rows lacking
-# any of the AI category tags. Catches the small AI-infra population
-# that Crunchbase tagging missed (~25 rows across 2.87M per A1.4 probe).
-INFRA_KEYWORDS_RE = re.compile(
-    r"\b(inference\s+platform|model\s+serving|model\s+hosting|"
-    r"inference\s+api|llm\s+api|gpu\s+rental|gpu\s+cloud|"
-    r"ai\s+infrastructure|ai\s+accelerator|ai\s+chip|"
-    r"foundation\s+model|frontier\s+model|llm\s+inference)\b",
-    re.IGNORECASE,
-)
-
-# Tier 3 — founding window. 2010 lower bound = modern AI era start.
-# 2026 upper bound = current year (founding year filter does not
-# constrain outcome horizon — that's handled by the outcome_label
-# logic which marks INDETERMINATE for too-recent companies).
+# Default founding window used by the published method; callers may override it.
 FOUNDED_YEAR_MIN = 2010
 FOUNDED_YEAR_MAX = 2026
 
@@ -104,15 +68,15 @@ def parse_year(s):
         return None
 
 
-def passes_tier_1(row):
+def passes_tier_1(row, categories, keyword_re=None):
     """Return ('category', None) if any AI category matches; ('reverse_recall_keyword', None)
     if no AI category but description matches infra keyword regex; else (None, None)."""
     cats_str = row.get("categories") or ""
     row_cats = {c.strip() for c in cats_str.split(",") if c.strip()}
-    if row_cats & AI_CATEGORIES_ALLOW:
+    if row_cats & categories:
         return "category"
     desc = row.get("short_description") or ""
-    if INFRA_KEYWORDS_RE.search(desc):
+    if keyword_re is not None and keyword_re.search(desc):
         return "reverse_recall_keyword"
     return None
 
@@ -131,9 +95,18 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--founded-year-min", type=int, default=FOUNDED_YEAR_MIN)
     parser.add_argument("--founded-year-max", type=int, default=FOUNDED_YEAR_MAX)
+    parser.add_argument("--category", action="append", required=True,
+                        help="Allowed category; repeat for multiple values")
+    parser.add_argument("--keyword-regex",
+                        help="Optional case-insensitive description regex for reverse recall")
     args = parser.parse_args()
     if args.founded_year_min > args.founded_year_max:
         parser.error("--founded-year-min cannot exceed --founded-year-max")
+    try:
+        keyword_re = re.compile(args.keyword_regex, re.IGNORECASE) if args.keyword_regex else None
+    except re.error as exc:
+        parser.error(f"invalid --keyword-regex: {exc}")
+    categories = frozenset(args.category)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     chunks = sorted(args.input_dir.glob(args.glob))
     if not chunks:
@@ -155,7 +128,7 @@ def main():
                 for row in reader:
                     funnel["total"] += 1
 
-                    t1_path = passes_tier_1(row)
+                    t1_path = passes_tier_1(row, categories, keyword_re)
                     if t1_path is None:
                         continue
                     funnel["after_tier_1"] += 1

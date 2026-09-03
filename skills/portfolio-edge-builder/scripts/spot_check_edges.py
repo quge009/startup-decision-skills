@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""W14 spot-check helper — dump each per-firm parquet's first N rows to a markdown.
+"""Dump each per-firm Parquet's first N rows to a review Markdown file.
 
-For W14 selector-quality review: human reads the emitted markdown, spots
+For selector-quality review: inspect the emitted Markdown for
 selectors that captured wrong content (nav items, boilerplate, image alt
-text that isn't a company name), decides which firms need W12 re-generation
+text that isn't a company name), then decide which firms need selector regeneration
 or manual selector patching.
 
 Outputs: `_audit/spot_check_YYYY-MM-DD.md` — table per firm with first N
@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import os
 import re
 import sys
 from pathlib import Path
@@ -27,7 +26,6 @@ from pathlib import Path
 import pyarrow.parquet as pq
 
 
-DEFAULT_IBA_DATA = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
 DEFAULT_SAMPLE = 10
 
 # Words that if they show up in company name field probably mean selector
@@ -111,11 +109,11 @@ def spot_check_firm(slug: str, parquet_path: Path, sample: int) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--data-root", default=str(DEFAULT_IBA_DATA))
+    ap.add_argument("--data-root", required=True,
+                    help="Root containing extracted/edges_by_source")
     ap.add_argument("--sample", type=int, default=DEFAULT_SAMPLE,
                     help=f"Rows to sample per firm (default: {DEFAULT_SAMPLE})")
-    ap.add_argument("--out", default=None,
-                    help="Output markdown path (default: _audit/spot_check_YYYY-MM-DD.md under repo root)")
+    ap.add_argument("--out", required=True, help="Output Markdown path")
     args = ap.parse_args()
 
     data_root = Path(args.data_root)
@@ -136,18 +134,14 @@ def main() -> int:
 
     # Write output
     today = dt.date.today().isoformat()
-    if args.out:
-        out_path = Path(args.out)
-    else:
-        repo_root = Path(__file__).parent.parent
-        out_path = repo_root / "_audit" / f"spot_check_{today}.md"
+    out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     total_edges = sum(c["n"] for c in checks)
     n_firms_with_flags = sum(1 for c in checks if c["flags"] and any(f.startswith("⚠️") for f in c["flags"]))
 
     lines = [
-        f"# W14 spot-check — {today}",
+        f"# Portfolio edge spot-check — {today}",
         "",
         f"Firms reviewed: **{len(checks)}** · Total edges: **{total_edges:,}** · Firms with ⚠️ warnings: **{n_firms_with_flags}**",
         "",

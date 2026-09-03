@@ -5,7 +5,7 @@ description: Evaluate a business proposal through candidate classification, time
 
 # Evaluate Proposal — End-to-End Pipeline Orchestrator (v1.5a)
 
-You orchestrate the v1.5a business-predictive-model predictive model
+You orchestrate the proposal-evaluation model
 pipeline. Given a free-text business proposal description, you run the
 six steps and write per-candidate structured outputs to the working
 directory. No HTML storage is produced — cohort-level rollup (if any) is

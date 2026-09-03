@@ -1,6 +1,6 @@
 {
   "format": "pyarrow-schema-json-v1",
-  "table": "funding_events_chip_v0.3.parquet",
+  "table": "funding_events_v0.3.parquet",
   "event_family": "funding",
   "schema_version": "v0.3.0",
   "fields": [
@@ -125,7 +125,7 @@
     "company_entity"
   ],
   "metadata": {
-    "company_entity": "companies_chip_subset_entity_v0.3.parquet",
+    "company_entity": "companies_entity_v0.3.parquet",
     "schema_version": "v0.3.0"
   },
   "event_type_enum": [

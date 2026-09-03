@@ -11,7 +11,7 @@ Design:
   the raw extracted name starts with `http://` or `https://`.
 - `company_normalized_name` (via _common.normalize_name) and
   `company_domain` (via _common.extract_domain from company_url) are computed
-  here — downstream (W15 merge, M3 features) reads canonical form directly.
+  here so downstream merge and feature workflows read canonical form directly.
 - Sanity-check row count vs `sanity_checks.min_edges/max_edges` in YAML;
   on violation, print a warning and continue (do NOT block the run — one bad
   firm does not stop unrelated firms).
@@ -48,7 +48,6 @@ from _common import normalize_name, extract_domain
 # ─────────────────────────────────────────────────────────────────────────
 
 REPO_ROOT = Path(__file__).parent.parent
-DEFAULT_IBA_DATA = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
 SCHEMA_VERSION = "v0.1.0"
 
 # Position enum (per edges_long_v0.1.spec.md §Position value definitions)
@@ -139,7 +138,7 @@ def _clean_url_to_name(raw: str) -> str:
 
 
 def _is_url(s: str) -> bool:
-    # 2026-07-30 W20 v3 fix: also detect path-only hrefs like "/portfolio/foo/"
+    # Also detect path-only hrefs such as "/portfolio/foo/".
     # (IVP / NEA use extract:attribute:href which yields relative paths on
     # logo-only portfolio pages). Without this, path-only names bypassed
     # _clean_url_to_name and leaked "portfolio perplexity"-style noise into
@@ -417,8 +416,8 @@ def main() -> int:
                     help="Path to caller-supplied investor/portfolio metadata YAML")
     ap.add_argument("--selectors-dir", required=True,
                     help="Directory containing caller-supplied selector YAML files")
-    ap.add_argument("--data-root", default=str(DEFAULT_IBA_DATA),
-                    help=f"IBA data root (default: {DEFAULT_IBA_DATA})")
+    ap.add_argument("--data-root", required=True,
+                    help="Root containing cached HTML and receiving extracted Parquets")
     ap.add_argument("--date", default=None,
                     help="HTML cache date subdir (default: auto-resolve newest)")
     args = ap.parse_args()

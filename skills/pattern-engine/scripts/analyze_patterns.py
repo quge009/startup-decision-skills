@@ -1488,13 +1488,13 @@ def main() -> None:
                 f"signature_n_{pattern_id}_chains": pa.int64(), f"signature_any_{pattern_id}": pa.bool_(),
                 f"primary_n_{pattern_id}_chains": pa.int64(), f"primary_any_{pattern_id}": pa.bool_(),
             })
-        write_parquet(chain_features, temp_dir / "chain_ordered_features_v0.2.parquet", chain_types)
-        write_parquet(company_profiles, temp_dir / "company_chain_profiles_v0.2.parquet", company_types)
-        write_parquet(investor_profiles, temp_dir / "investor_interface_profiles_v0.2.parquet")
-        write_parquet(interface_identity_rows, temp_dir / "interface_identity_rows_v0.2.parquet")
-        (temp_dir / "pattern_prevalence_sf_v0.2.json").write_text(json.dumps(prevalence, indent=2, sort_keys=True, allow_nan=False) + "\n")
-        (temp_dir / "interface_identity_coverage_v0.2.json").write_text(json.dumps(identity, indent=2, sort_keys=True, allow_nan=False) + "\n")
-        (temp_dir / "summary_v0.2.md").write_text(render_summary(prevalence, identity, pattern_set))
+        write_parquet(chain_features, temp_dir / "chain_ordered_features.parquet", chain_types)
+        write_parquet(company_profiles, temp_dir / "company_chain_profiles.parquet", company_types)
+        write_parquet(investor_profiles, temp_dir / "investor_interface_profiles.parquet")
+        write_parquet(interface_identity_rows, temp_dir / "interface_identity_rows.parquet")
+        (temp_dir / "pattern_prevalence.json").write_text(json.dumps(prevalence, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        (temp_dir / "interface_identity_coverage.json").write_text(json.dumps(identity, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        (temp_dir / "summary.md").write_text(render_summary(prevalence, identity, pattern_set))
         resolved_spec = pattern_set_payload(pattern_set)
         (temp_dir / "patterns_resolved.json").write_text(json.dumps(resolved_spec, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
         outputs = {path.name: output_metadata(path) for path in sorted(temp_dir.iterdir())}
@@ -1502,7 +1502,7 @@ def main() -> None:
         common_path = script_path.parent / "_common.py"
         statuses = {definition.id: definition.evaluation_status for definition in pattern_set.patterns}
         manifest = {
-            "analysis_version": "v0.2", "argv": list(sys.argv),
+            "analysis_contract": "event-chain-pattern-analysis-v1", "argv": list(sys.argv),
             "runtime": {"python": platform.python_version(), "python_implementation": platform.python_implementation(), "pyarrow": pa.__version__},
             "git": git_provenance(script_path.parent),
             "code_inputs": {
@@ -1546,11 +1546,11 @@ def main() -> None:
                     "unknown_end_date": "no middle events",
                 },
                 "partial_date_boundary_ambiguity": "feature flags referenced non-day event intervals that can cross a known boundary",
-                "next_sensitivity_not_run": "outcome-day right-closed window sensitivity is NEXT work, not completed in v0.2",
+                "next_sensitivity_not_run": "outcome-day right-closed window sensitivity is NEXT work, not run in this analysis",
             },
             "outputs": outputs,
         }
-        (temp_dir / "run_manifest_v0.2.json").write_text(json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        (temp_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n")
         os.replace(temp_dir, output_dir)
     except Exception:
         shutil.rmtree(temp_dir, ignore_errors=True)

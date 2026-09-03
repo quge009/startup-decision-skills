@@ -371,7 +371,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         },
     }
     manifest = {
-        "generation_version": "v0.1", "phase": "LABEL_BLIND_GENERATION_FREEZE",
+        "generation_contract": "label-blind-pattern-freeze-v1", "phase": "LABEL_BLIND_GENERATION_FREEZE",
         "runtime": {"python": platform.python_version(), "pyarrow": pa.__version__},
         "inputs": input_meta,
         "configuration_inputs": {
@@ -415,7 +415,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
     output.parent.mkdir(parents=True, exist_ok=True)
     temp = Path(tempfile.mkdtemp(prefix=output.name + ".tmp-", dir=output.parent))
     try:
-        lattice_path = temp / "candidate_lattice_v0.1.json"
+        lattice_path = temp / "candidate_lattice.json"
         frozen_path = temp / "pattern_candidates_frozen.json"
         lattice_path.write_text(json.dumps(lattice, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
         frozen_path.write_text(json.dumps(frozen, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
@@ -423,7 +423,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
             lattice_path.name: {"sha256": engine.sha256_file(lattice_path), "bytes": lattice_path.stat().st_size},
             frozen_path.name: {"sha256": engine.sha256_file(frozen_path), "bytes": frozen_path.stat().st_size},
         }
-        (temp / "generation_manifest_v0.1.json").write_text(json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        (temp / "generation_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n")
         os.replace(temp, output)
     except Exception:
         shutil.rmtree(temp, ignore_errors=True)

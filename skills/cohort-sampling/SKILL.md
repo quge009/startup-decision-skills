@@ -10,9 +10,10 @@ Inputs and outputs are always supplied explicitly.
 
 ## Workflow
 
-1. Use `scripts/filter_cohort.py` to select the AI-company research cohort from
-   source CSV chunks. Supply input directory, filename glob, output path, and
-   founding-year bounds. The documented category/keyword rule and shared
+1. Use `scripts/filter_cohort.py` to select a research cohort from source CSV
+   chunks. Supply input directory, filename glob, output path, founding-year
+   bounds, repeated `--category` values, and an optional `--keyword-regex`. The
+   caller-defined category/keyword rule and shared
    outcome-label mapping remain stable method choices.
 2. Add any classification fields required for stratification outside this
    skill, then run `scripts/split_cohort.py`. Supply the stratum column,

@@ -1,11 +1,11 @@
 # Investors entity v0.3
 
-Investor v0.3 is a strictly additive extension of the authoritative `investors_entity_v0.2.parquet` snapshot. It contains exactly **1,915 rows** in this order:
+The materialized investor entity is a strictly additive extension of a caller-supplied authoritative base. It contains, in order:
 
-1. the frozen **989 v0.2 rows**, preserved value-for-value and in their original order; then
-2. the **926** entities released in `interface_counterparty_identity/v1/new_investors_entity.jsonl`.
+1. every supplied base row, preserved value-for-value and in original order; then
+2. reviewed entities from `new_investors_entity.jsonl`.
 
-The frozen v0.1 entity table is not part of the v0.3 entity universe and **no legacy entity row may be appended**. It may be read only as a pinned aid for conservatively mapping compatible v0.1 provenance into the v0.2 base. See `investors_provenance_v0.2.spec.md`.
+A legacy entity table may be used only as a pinned mapping aid. Its rows are never appended automatically.
 
 ## Columns and new rows
 
@@ -42,15 +42,15 @@ New rows use `schema_version=v0.3.0`, contain all 22 keys, use list-valued `inve
 
 ## Deduplication and foreign keys
 
-New-entity deduplication checks accepted QID and punctuation-insensitive exact canonical name against the pinned 989-row base and other new rows. Fuzzy similarity is never a merge rule.
+New-entity deduplication checks accepted QID and punctuation-insensitive exact canonical name against the supplied base and other new rows. Fuzzy similarity is never a merge rule.
 
-Every published `EXISTING_INVESTOR` Interface binding references an ID in the authoritative 989-row base. Every published `NEW_INVESTOR` binding references one of the 926 appended package rows, including 58 stable-ID legacy-registry investors actually observed in Interface. No binding is silently suppressed.
+Every `EXISTING_INVESTOR` binding must reference the supplied base. Every `NEW_INVESTOR` binding must reference an appended reviewed row. No binding is silently suppressed.
 
 ## Invariants
 
-- row count is exactly `989 + 926 = 1,915`;
-- rows `[0:989]` equal the pinned v0.2 table value-for-value;
-- no v0.1 entity row is appended;
+- row count equals base rows plus reviewed additions;
+- the base prefix is preserved value-for-value;
+- no legacy mapping row is appended automatically;
 - all investor IDs are unique;
 - all materialized Interface investor foreign keys resolve to this table;
 - the companion provenance table is partial for the frozen base and complete for the new `interface_recovery` fields, as specified separately.
