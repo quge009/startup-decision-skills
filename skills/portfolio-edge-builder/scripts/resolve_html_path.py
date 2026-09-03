@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Resolve the newest cached HTML file path for one firm.
 
-Called by the @portfolio-selector-generator skill to avoid the LLM
+Called by the portfolio-edge-builder skill to avoid the LLM
 listing directories to find the latest YYYY-MM-DD subdir. Prints the
 absolute path to stdout.
 

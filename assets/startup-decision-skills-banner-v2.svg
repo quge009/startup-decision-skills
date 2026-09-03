@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 1600 400" role="img" aria-labelledby="title desc">
+  <title id="title">Startup Decision Skills</title>
+  <desc id="desc">Evidence converges on a decision point and branches into two possible actions.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef6ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#17335f" flood-opacity=".14"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="400" rx="28" fill="url(#bg)"/>
+  <circle cx="70" cy="54" r="3" fill="#cbdcf1"/>
+  <circle cx="90" cy="54" r="3" fill="#dbe7f5"/>
+  <circle cx="70" cy="74" r="3" fill="#dbe7f5"/>
+  <circle cx="1530" cy="326" r="3" fill="#cbdcf1"/>
+  <circle cx="1510" cy="346" r="3" fill="#dbe7f5"/>
+  <circle cx="1530" cy="346" r="3" fill="#dbe7f5"/>
+  <text x="80" y="224" fill="#102a56" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="80" font-weight="720" letter-spacing="-3">Startup Decision Skills</text>
+  <g transform="translate(970 46)" filter="url(#shadow)">
+    <!-- Three evidence streams converge without implying a fixed data type. -->
+    <rect x="0" y="28" width="92" height="48" rx="14" fill="#4c8de5"/>
+    <rect x="0" y="124" width="92" height="48" rx="14" fill="#24aab7"/>
+    <rect x="0" y="220" width="92" height="48" rx="14" fill="#a984e8"/>
+    <path d="M92 52 H154 L204 148 M92 148 H204 M92 244 H154 L204 148"
+          fill="none" stroke="#8aa5c9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- The diamond is the conventional decision node. -->
+    <path d="M204 78 L274 148 L204 218 L134 148 Z" fill="#ffffff" stroke="#173b72" stroke-width="8"/>
+    <circle cx="204" cy="148" r="12" fill="#f27868"/>
+
+    <!-- Two legitimate action paths leave the same decision. -->
+    <path d="M274 148 H326 Q350 148 350 124 V76 H406"
+          fill="none" stroke="#43b985" stroke-width="9" stroke-linecap="round"/>
+    <path d="M274 148 H326 Q350 148 350 172 V220 H406"
+          fill="none" stroke="#7358d6" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="444" cy="76" r="38" fill="#e9f8f1" stroke="#43b985" stroke-width="7"/>
+    <path d="M426 77 L439 90 L464 61" fill="none" stroke="#24865f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="444" cy="220" r="38" fill="#f1edfb" stroke="#7358d6" stroke-width="7"/>
+    <path d="M425 220 H463" fill="none" stroke="#5840b6" stroke-width="9" stroke-linecap="round"/>
+  </g>
+</svg>

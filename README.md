@@ -1,91 +1,124 @@
-# Startups Research Skills · startup-decision-skills
+<p align="center">
+  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: sixteen modular agent skills">
+</p>
 
-Agent skills extracted from the **business-predictive-model** research work---a
-full-lifecycle decision toolchain for tech founders:
+<h1 align="center">Startup Decision Skills</h1>
 
-* **Part 1 — Pre-BP (business-model evaluation)**: assess a startup
-  idea's viability before the pitch and benchmark the evaluation pipeline.
-* **Part 2 — Post-BP (post-investment behavior)**: after the pitch, help
-  founders find the right capital and avoid pitfalls by profiling investor
-  pre/post-investment behavior.
+<p align="center">
+  <strong>Reusable Agent Skills for evidence-grounded startup evaluation and investor-behavior research.</strong>
+</p>
 
-This repo (`startup-decision-skills`) publishes the **12 Claude Agent
-Skills** that power both parts.
-Each is a standard Agent Skill (a folder with a `SKILL.md` + optional
-`scripts/`), self-contained, with no absolute paths or secrets — drop any
-folder into `.claude/skills/` (Claude Code) or import it per
-[agentskills.io](https://agentskills.io).
+<p align="center">
+  <a href="https://agentskills.io"><img src="https://img.shields.io/badge/Standard-Agent%20Skills-2563EB" alt="Agent Skills standard"></a>
+  <a href="https://huggingface.co/datasets/quge007/eventchain"><img src="https://img.shields.io/badge/🤗%20Dataset-EventChain-FFD21E" alt="EventChain dataset"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E" alt="MIT license"></a>
+</p>
 
-## Skills
+Sixteen composable skills turn startup proposals and public-source records
+into structured candidate cards, time-bounded evidence checks, canonical
+entities, event chains, and auditable retrospective patterns. The collection
+covers both sides of a startup decision:
 
-### Part 1 — Business-model prediction (idea-stage)
+- **Before investment:** evaluate an idea without leaking its later outcome.
+- **After investment:** reconstruct how funding, exposure, and investor-company
+  interface events unfold over time.
 
-| Skill | Tier | What it does |
-|---|---|---|
-| [evaluate-proposal](skills/evaluate-proposal/) | core | End-to-end orchestrator: free-text proposal → candidate card → archetype → M-check → U-check → verdict + reasoning |
-| [candidate-classifier](skills/candidate-classifier/) | core | Candidate-card 5-dim summary + archetype classification + founding year |
-| [outcome-labeling](skills/outcome-labeling/) | 1 | Deterministic 8-label outcome taxonomy + verdict↔truth bridge for Crunchbase rows |
-| [f05-stats](skills/f05-stats/) | 1 | F0.5, Wilson 95% CI, confusion-matrix cells for calibration |
-| [leakage-scan](skills/leakage-scan/) | 2 | Scan candidate cards for post-founding outcome leakage |
-| [cohort-sampling](skills/cohort-sampling/) | 2 | Build benchmark cohorts + stratified train/val split + pool-1 sample |
+## Start here
 
-### Part 1 — Benchmark / case study support
-
-| Skill | Tier | What it does |
-|---|---|---|
-| [web-screenshot-capture](skills/web-screenshot-capture/) | 2 | Full-page web screenshots (Playwright) + PNG→webp conversion |
-
-### Part 2 — Post-investment behavior (investor analysis)
-
-| Skill | Tier | What it does |
-|---|---|---|
-| [portfolio-selector-generator](skills/portfolio-selector-generator/) | core | Generate CSS-selector configs to extract portfolio companies from VC sites |
-| [event-claim-resolution](skills/event-claim-resolution/) | 1 | Merge multi-source event claims into canonical events |
-| [event-chain-builder](skills/event-chain-builder/) | 2 | Build multi-source event timelines + materialize outcome chains |
-| [entity-dedup](skills/entity-dedup/) | 1 | Dedupe company / investor entities into canonical IDs |
-| [pattern-engine](skills/pattern-engine/) | 2 | Config-driven retrospective event-pattern recognition over entity/event data |
-
-**Tier definitions** — `core`: existing production framework skills;
-`1`: pure-logic, previously productized script; `2`: needs small
-parameterization (done here) before release.
-
-## Installation (Claude Code)
-
-Each skill is a self-contained folder. Copy a skill into your agent skill
-directory:
+Choose the smallest skill that matches the task. Use
+[`evaluate-proposal`](skills/evaluate-proposal/) only for the complete proposal
+pipeline; use its component skills directly when you need one stage.
 
 ```bash
-cp -r skills/evaluate-proposal ~/.claude/skills/
-# or, to enable several at once:
-cp -r skills/outcome-labeling skills/f05-stats skills/leakage-scan ~/.claude/skills/
+git clone https://github.com/quge009/startup-decision-skills.git
+cp -r startup-decision-skills/skills/evaluate-proposal ~/.claude/skills/
+cp -r startup-decision-skills/skills/candidate-classifier ~/.claude/skills/
+cp -r startup-decision-skills/skills/tavily-query-builder ~/.claude/skills/
+cp -r startup-decision-skills/skills/check-interpreter ~/.claude/skills/
 ```
 
-Skills that invoke LLM orchestration (evaluate-proposal,
-candidate-classifier) need an LLM runtime; the pure-compute skills
-(outcome-labeling, f05-stats, event-claim-resolution, leakage-scan,
-cohort-sampling) run on stdlib alone.
+Each folder follows the [Agent Skills](https://agentskills.io) convention: a
+required `SKILL.md` plus only the scripts, references, schemas, and examples the
+workflow needs. Install folders in the skill directory supported by your agent
+runtime.
 
-## Dependencies
+## Skill catalog
 
-Most skills are pure Python stdlib. A few need third-party packages:
+### Proposal evaluation
 
-| Skill | Dependencies |
+| Skill | What it does |
 |---|---|
-| entity-dedup | `pandas`, `pyarrow`, `pyyaml` |
-| event-chain-builder | `pandas`, `pyarrow` |
-| pattern-engine | `pyarrow` |
-| portfolio-selector-generator | `pyyaml`, `beautifulsoup4`, `lxml` |
-| web-screenshot-capture | `playwright`, `pillow` |
+| [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
+| [`candidate-classifier`](skills/candidate-classifier/) | Produces the five-dimension candidate card, archetype, and founding year |
+| [`tavily-query-builder`](skills/tavily-query-builder/) | Builds uniform M-check and U-check research queries |
+| [`check-interpreter`](skills/check-interpreter/) | Retrieves time-bounded evidence and interprets market and moat checks |
+| [`outcome-labeling`](skills/outcome-labeling/) | Maps company records to the fixed eight-label outcome ontology |
+| [`leakage-scan`](skills/leakage-scan/) | Detects post-founding outcome information in candidate cards |
+| [`cohort-sampling`](skills/cohort-sampling/) | Builds benchmark cohorts and deterministic train/validation samples |
+| [`f05-stats`](skills/f05-stats/) | Computes F0.5, Wilson intervals, and confusion-matrix statistics |
+
+### Investor and event-chain research
+
+| Skill | What it does |
+|---|---|
+| [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Authors selectors, extracts portfolio pages, audits edges, and merges source tables |
+| [`entity-dedup`](skills/entity-dedup/) | Resolves company and investor names into stable canonical identities |
+| [`event-evidence-collector`](skills/event-evidence-collector/) | Collects source-grounded funding, exposure, and interface event claims |
+| [`event-claim-resolution`](skills/event-claim-resolution/) | Merges multi-source claims into auditable canonical events |
+| [`event-chain-builder`](skills/event-chain-builder/) | Materializes funding, exposure, and interface events into outcome chains |
+| [`interface-identity-resolution`](skills/interface-identity-resolution/) | Resolves reviewed Interface counterparties into investor or associated identities |
+| [`pattern-engine`](skills/pattern-engine/) | Freezes, audits, evaluates, and registers label-blind event-chain patterns |
+| [`post-investment-behavior`](skills/post-investment-behavior/) | Derives descriptive investor behavior from temporally ordered investment evidence |
+
+## How the collection fits together
+
+```text
+Proposal → Candidate card → Time-bounded M/U evidence → Decision
+                               │
+Public sources → Portfolio edges → Entities → Event evidence → Event chains → Patterns
+                                      └→ Interface identities → Post-investment behavior
+```
+
+`RECOMMEND` and `AVOID` in the pattern engine label **operating actions observed
+within event chains**. They are not labels assigned to companies.
+
+## Requirements
+
+Several skills use only the Python standard library. Install optional packages
+for the workflows you plan to run:
+
+| Workflow | Packages |
+|---|---|
+| Evidence retrieval | Tavily CLI (`tvly`) and API access |
+| Entity and chain processing | `pandas`, `pyarrow`, `pyyaml` |
+| Portfolio extraction | `pyyaml`, `beautifulsoup4`, `lxml` |
 
 ```bash
-pip install pandas pyarrow pyyaml beautifulsoup4 lxml playwright pillow
+pip install pandas pyarrow pyyaml beautifulsoup4 lxml
 ```
+
+LLM-guided skills require a compatible agent runtime. Online evidence retrieval
+requires `TAVILY_API_KEY`; credentials must be supplied through the environment
+and must never be stored in this repository.
+
+## Dataset
+
+The companion [EventChain dataset](https://huggingface.co/datasets/quge007/eventchain)
+contains the released entities, provenance, events, and chain tables. See
+[`datasets-index.md`](datasets-index.md) for scope and licensing boundaries.
+
+## Scope and validation
+
+These skills package the methods used in the companion research. They are
+research tools, not investment advice, and they do not guarantee complete
+coverage of private company activity. Deterministic scripts validate schemas
+and fail loudly on contract violations; LLM- and web-dependent outputs still
+require source review.
+
+All `SKILL.md` files pass the Agent Skills structural validator, and all bundled
+Python files are syntax-checked before release.
 
 ## License
 
-[MIT](LICENSE)
-
-## Dataset index
-
-Related datasets published on Hugging Face are listed in
-[datasets-index.md](datasets-index.md).
+Code and skill instructions are released under the [MIT License](LICENSE).
+Dataset files are separately released under CC BY 4.0.

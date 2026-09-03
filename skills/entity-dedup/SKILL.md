@@ -1,6 +1,6 @@
 ---
 name: entity-dedup
-description: "Deduplicate company and investor entity names into canonical entities with stable IDs. Company dedup strips legal suffixes (inc/corp/ltd/plc/llc/etc.) and applies a manual alias map, then assigns sequential company_id (co:XXXX-XXXX:<slug>); investor merge collapses per-source rows via wikidata QID / domain / normalized-name+state equivalence and builds the slug-keyed investor_id lookup map. CLI flags for both pipelines. pandas + pyarrow. Use for canonical company/investor entity merging in VC / startup research. Trigger on: 'dedupe company names', 'canonical entity id', 'merge investor entities', 'company dedup'."
+description: "Deduplicate company and investor entity names into canonical entities with stable IDs using deterministic normalization and evidence-based equivalence rules. Use for canonical company or investor entity merging in VC and startup research; optional project-specific alias and universe files must be supplied explicitly."
 ---
 
 # Entity Dedup — Canonical company & investor entity keys
@@ -19,9 +19,9 @@ parquet files.
   legal suffixes (`inc`, `corp`, `ltd`, `plc`, `llc`, `lp`, `sa`, `ag`,
   `nv`, `bv`, `co`, `company`, `corporation`, `limited`, `group`,
   `holdings`, `international`, `global`, `industries`) popped repeatedly.
-- **Manual alias rules**: `configs/company_dedup_manual.yaml` maps alias
-  spellings → canonical name via `dedup_lookup_key` (whitespace-collapsed,
-  casefolded). The canonical spelling itself is also a valid lookup target.
+- **Optional manual alias rules**: `--manual-aliases <yaml>` accepts
+  project-specific canonical-name and alias groups. No manual aliases are
+  applied by default.
 - **Garbage filtering**: `_is_garbage` rejects pure-numeric / year-like,
   UI-navigation keywords (Japanese/Chinese), leaked pandas Series repr,
   VC portfolio-page metadata concatenated into names, and sentence-like
@@ -35,12 +35,16 @@ parquet files.
 
 ```bash
 python3 scripts/build_company_entity_v02.py --edges-dir <dir> --out <path>
+# Optional, for a separately maintained research-specific mapping:
+python3 scripts/build_company_entity_v02.py --edges-dir <dir> --out <path> \
+  --manual-aliases <aliases.yaml>
 ```
 
 | Flag | Default | Meaning |
 |---|---|---|
 | `--edges-dir` | `~/investor-behavior-analysis/extracted/edges_by_source` (or `$INVESTOR_BEHAVIOR_DATA_DIR/extracted/edges_by_source`) | Directory of `*_v0.2.parquet` edges files |
 | `--out` | `~/investor-behavior-analysis/companies_entity_v0.2.parquet` (or `$INVESTOR_BEHAVIOR_DATA_DIR/companies_entity_v0.2.parquet`) | Output parquet path |
+| `--manual-aliases` | none | Optional project-specific canonical-name and alias YAML |
 
 ## Investor merge pipeline (`merge_investors.py`)
 
@@ -65,13 +69,15 @@ provenance tables and a coverage report.
 ### Usage
 
 ```bash
-python3 scripts/merge_investors.py --out-dir <dir> --universe <yaml>
+python3 scripts/merge_investors.py --out-dir <dir>
+# Optional sanity checks for a separately maintained research universe:
+python3 scripts/merge_investors.py --out-dir <dir> --universe <universe.yaml>
 ```
 
 | Flag | Default | Meaning |
 |---|---|---|
 | `--out-dir` | `~/investor-behavior-analysis` (or `$INVESTOR_BEHAVIOR_DATA_DIR`) | Root output dir; reads `extracted/investors_by_source/*_v0.1.parquet` from here |
-| `--universe` | `<skill>/../configs/universe_v0.1.yaml` | Universe sanity-check config |
+| `--universe` | none | Optional row-count corridor and expected-name sanity-check YAML |
 
 ## Investor ID lookup map (`_common.py`)
 
@@ -94,8 +100,7 @@ suffix), `normalize_stage` / `normalize_stage_list` (10-value stage enum), and
 
 - Python 3.10+ (`from __future__ import annotations`).
 - `pandas` and `pyarrow` (both scripts + `_common.py`).
-- `pyyaml` — `merge_investors.py` universe config and
-  `build_company_entity_v02.py` manual-dedup config.
+- `pyyaml` when using an optional universe or manual-alias configuration.
 
 ## Self-test
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic self-test for a candidate selector YAML against a real HTML.
 
-Called by the @portfolio-selector-generator skill to REPLACE the previously
+Called by the portfolio-edge-builder skill to replace the previously
 LLM-authored ad-hoc Bash + `pip install --user beautifulsoup4` self-test
 (which was fragile: some LLM instances gave up on PEP-668 pip failures and
 emitted null selectors).

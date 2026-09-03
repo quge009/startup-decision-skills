@@ -31,9 +31,6 @@ from _common import SOURCE_CONFIDENCE, SOURCE_PRIORITY, INVESTOR_TYPE_ENUM
 # ─────────────────────────────────────────────────────────────────────────
 
 DEFAULT_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")))
-UNIVERSE_YAML = (
-    Path(__file__).parent.parent / "configs" / "universe_v0.1.yaml"
-)
 SOURCES = ("findfunding", "wikidata", "manual_seed", "url_verify")
 # `url_verify` is the W9b (2026-07-28) URL全库验证 pass — optional at merge time
 # (missing parquet is skipped with a warning; other sources are required).
@@ -459,17 +456,13 @@ def build_coverage_report(
     provenance_rows: list[dict],
     per_source_rows: dict[str, list[dict]],
     dedup_stats: dict,
-    universe: dict,
+    universe: dict | None,
     run_date: dt.date,
 ) -> str:
     """Assemble the step1_coverage_v0.1.md markdown report."""
     lines: list[str] = []
 
     total = len(canonical_rows)
-    corridor_min = universe["sanity_checks"]["min_merged_rows"]
-    corridor_max = universe["sanity_checks"]["max_merged_rows"]
-    marquee = universe["sanity_checks"]["must_contain_names"]
-
     lines.append(f"# Step 1 Coverage Report — v0.1")
     lines.append("")
     lines.append(f"**Generated**: {run_date.isoformat()}")
@@ -483,13 +476,18 @@ def build_coverage_report(
     lines.append(f"- Pre-dedup total: {sum(len(r) for r in per_source_rows.values())} "
                  f"({' + '.join(f'{s}={len(per_source_rows[s])}' for s in SOURCES)})")
     lines.append(f"- Rows collapsed via dedup: {dedup_stats['collapsed']}")
-    lines.append(f"- Universe corridor: [{corridor_min}, {corridor_max}]")
-    in_corridor = corridor_min <= total <= corridor_max
-    lines.append(f"- Status: **{'PASS' if in_corridor else 'WARN'}** {'' if in_corridor else '(row count outside corridor)'}")
+    if universe:
+        corridor_min = universe["sanity_checks"]["min_merged_rows"]
+        corridor_max = universe["sanity_checks"]["max_merged_rows"]
+        lines.append(f"- Universe corridor: [{corridor_min}, {corridor_max}]")
+        in_corridor = corridor_min <= total <= corridor_max
+        lines.append(f"- Status: **{'PASS' if in_corridor else 'WARN'}** {'' if in_corridor else '(row count outside corridor)'}")
+    else:
+        lines.append("- Universe-specific corridor: not configured")
     lines.append("")
 
     # ─ Marquee sanity ─
-    lines.append("## 2. Marquee sanity (must-contain names)")
+    lines.append("## 2. Universe-name sanity")
     lines.append("")
     from _common import normalize_name
     # Build a set of ALL normalized names known for each canonical firm,
@@ -506,15 +504,19 @@ def build_coverage_report(
     for p in provenance_rows:
         if p["field"] == "name" and p["value"]:
             all_norms.add(normalize_name(p["value"]))
-    hits, misses = [], []
-    for name in marquee:
-        norm = normalize_name(name)
-        (hits if norm in all_norms else misses).append(name)
-    lines.append(f"- Passed: **{len(hits)}/{len(marquee)}** (matched against canonical + provenance names)")
-    if misses:
-        lines.append(f"- Missing: {', '.join(misses)}")
+    if universe:
+        marquee = universe["sanity_checks"]["must_contain_names"]
+        hits, misses = [], []
+        for name in marquee:
+            norm = normalize_name(name)
+            (hits if norm in all_norms else misses).append(name)
+        lines.append(f"- Passed: **{len(hits)}/{len(marquee)}** (matched against canonical + provenance names)")
+        if misses:
+            lines.append(f"- Missing: {', '.join(misses)}")
+        else:
+            lines.append(f"- Missing: (none)")
     else:
-        lines.append(f"- Missing: (none)")
+        lines.append("- Not run: provide `--universe` to enable expected-name checks.")
     lines.append("")
 
     # ─ Per-type distribution ─
@@ -657,8 +659,8 @@ def main() -> int:
     )
     ap.add_argument("--out-dir", default=str(DEFAULT_ROOT),
                     help=f"Root output dir (default: {DEFAULT_ROOT})")
-    ap.add_argument("--universe", default=str(UNIVERSE_YAML),
-                    help=f"Universe yaml (default: {UNIVERSE_YAML})")
+    ap.add_argument("--universe", type=Path,
+                    help="Optional YAML with row-count and expected-name sanity checks")
     args = ap.parse_args()
 
     run_date = dt.date.today()
@@ -695,8 +697,10 @@ def main() -> int:
     print(f"[provenance] {len(provenance_rows)} rows")
 
     # Load universe
-    with open(args.universe) as f:
-        universe = yaml.safe_load(f)
+    universe = None
+    if args.universe:
+        with args.universe.open() as f:
+            universe = yaml.safe_load(f)
 
     # Write parquets
     entity_path = out_dir / "investors_entity_v0.1.parquet"

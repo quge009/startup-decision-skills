@@ -1,0 +1,107 @@
+{
+  "format": "pyarrow-schema-json-v1",
+  "table": "exposure_events_chip_v0.3.parquet",
+  "event_family": "exposure",
+  "schema_version": "v0.3.0",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "company_id",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "event_date",
+      "type": "large_string",
+      "nullable": true
+    },
+    {
+      "name": "event_type",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "event_subtype",
+      "type": "large_string",
+      "nullable": true
+    },
+    {
+      "name": "title",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "summary",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "source_url",
+      "type": "large_string",
+      "nullable": true
+    },
+    {
+      "name": "source_type",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "confidence",
+      "type": "double",
+      "nullable": false
+    },
+    {
+      "name": "scraped_at",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "schema_version",
+      "type": "large_string",
+      "nullable": false
+    },
+    {
+      "name": "metadata_json",
+      "type": "large_string",
+      "nullable": false
+    }
+  ],
+  "metadata_order": [
+    "schema_version",
+    "company_entity"
+  ],
+  "metadata": {
+    "company_entity": "companies_chip_subset_entity_v0.3.parquet",
+    "schema_version": "v0.3.0"
+  },
+  "event_type_enum": [
+    "customer_change",
+    "executive_change",
+    "export_control",
+    "funding_general",
+    "funding_distress",
+    "ipo_attempt",
+    "litigation",
+    "other",
+    "product_launch",
+    "regulatory",
+    "supply_chain"
+  ],
+  "event_type_definitions": {
+    "customer_change": "A discrete material customer, contract, deployment, adoption, or commercial partnership change.",
+    "executive_change": "A material appointment, departure, resignation, or role change involving an executive or founder.",
+    "export_control": "An export restriction, sanctions listing, entity-list action, or comparable cross-border trade control affecting the company.",
+    "funding_general": "A successful or ordinarily progressing financing event without evidence of failure, withdrawal, cancellation, undersubscription, or distress.",
+    "funding_distress": "A failed, withdrawn, cancelled, or distressed financing situation; excludes ordinary successful financing announcements.",
+    "ipo_attempt": "An observable IPO or public-listing process or attempt, including preparation, filing, pricing, or SPAC-listing steps. Later completion, withdrawal, or other outcome information does not invalidate the attempt-stage event.",
+    "litigation": "A lawsuit, court action, indictment, or comparable legal proceeding involving the company.",
+    "other": "A discrete company exposure event that does not fit another exposure type; not a fallback for uncertain extraction.",
+    "product_launch": "A discrete launch, release, or unveiling of a company product, platform, or technology.",
+    "regulatory": "A non-export-control government approval, investigation, enforcement, antitrust, national-security, or other regulatory action.",
+    "supply_chain": "A material manufacturing, supplier, foundry, capacity, production, or logistics event."
+  }
+}

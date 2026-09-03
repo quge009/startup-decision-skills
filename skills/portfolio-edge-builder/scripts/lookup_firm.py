@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Look up one firm's metadata from top20_vc_portfolio.yaml by slug.
 
-Called by the @portfolio-selector-generator skill (via container Bash) to
+Called by the portfolio-edge-builder skill to
 avoid having the LLM parse the whole yaml every time. Print a JSON object
 so the skill's Claude can Read the stdout and use the values.
 

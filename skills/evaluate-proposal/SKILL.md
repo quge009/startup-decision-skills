@@ -148,7 +148,7 @@ Applies the v1.5 score formula:
 ```
 m_num, u_num = VERDICT_TO_NUM[verdict]    # PASS=1.0, WARN=0.5, FAIL=0.0
 score        = 0.5 * m_num + 0.5 * u_num
-verdict      = PASS if score >= 0.75 else
+verdict      = PASS if score >= 0.50 else
                WARN if score >= 0.25 else
                FAIL
 ```
@@ -207,7 +207,7 @@ python3 ~/.claude/skills/evaluate-proposal/scripts/validate_reasoning_schema.py 
 ### Step 7 — Print summary
 
 ```
-## Pipeline run complete (v1.5)
+## Pipeline run complete (v1.5a)
 
 **Candidate**:  <slug>
 **Founding year**: <YYYY> (Tavily retrieval window: <start> to <end>)
@@ -250,9 +250,9 @@ Do NOT enter interactive follow-up mode.
 
 ## Reference docs
 
-Methodology references are bundled in this skill's `reference/` directory
-and in sibling skills'. v1.5 docs are self-contained — no external HTML
-sync, no host `docs/` dependency.
+Methodology references are bundled in the two sibling skills below. The v1.5a
+workflow is self-contained once all four pipeline skills are installed; it has
+no external HTML or host `docs/` dependency.
 
 - `candidate-classifier/reference/archetype_taxonomy.md` — 7 archetype
   definitions + classifier guidance (referenced by Step 1b)
@@ -262,9 +262,3 @@ sync, no host `docs/` dependency.
   schema (referenced by Step 3)
 - `check-interpreter/reference/u_check.md` — U-check methodology + JSON
   schema (referenced by Step 4)
-
-## Examples
-
-See `examples/example_d2_pipeline_summary.md` for an end-to-end summary
-illustrating expected outputs from each step (D2 = AI Agent Orchestration
-Marketplace).

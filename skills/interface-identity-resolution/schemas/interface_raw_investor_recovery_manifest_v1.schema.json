@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "interface_raw_investor_recovery_manifest_v1.schema.json",
+  "title": "Interface raw investor name recovery overlay package manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source", "target_set", "canonical_exact_map", "overlay", "algorithms"],
+  "properties": {
+    "schema_version": {"const": "interface-raw-investor-recovery-manifest-v1"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "rows", "columns", "schema_version"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "rows": {"type": "integer", "minimum": 1},
+        "columns": {"const": 15},
+        "schema_version": {"const": "v0.3.0"}
+      }
+    },
+    "target_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicate", "count", "sorted_source_event_id_set_sha256"],
+      "properties": {
+        "predicate": {"const": "raw_investor_name IS NULL OR unicode-whitespace-only"},
+        "count": {"type": "integer", "minimum": 1},
+        "sorted_source_event_id_set_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "canonical_exact_map": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256", "rows", "key_column", "value_column", "match_mode"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "rows": {"type": "integer", "minimum": 0},
+            "key_column": {"const": "name"},
+            "value_column": {"const": "investor_id"},
+            "match_mode": {"const": "utf8-byte-exact"}
+          }
+        }
+      ]
+    },
+    "overlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "records", "status_counts", "recovered_name_count"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "records": {"type": "integer", "minimum": 1},
+        "status_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["RECOVERED", "NO_IDENTIFIABLE_COUNTERPARTY", "AMBIGUOUS"],
+          "properties": {
+            "RECOVERED": {"type": "integer", "minimum": 0},
+            "NO_IDENTIFIABLE_COUNTERPARTY": {"type": "integer", "minimum": 0},
+            "AMBIGUOUS": {"type": "integer", "minimum": 0}
+          }
+        },
+        "recovered_name_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "algorithms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_row_sha",
+        "event_id",
+        "name_order",
+        "materialization_order",
+        "source_page_quote_semantics",
+        "network_access"
+      ],
+      "properties": {
+        "source_row_sha": {"const": "interface-source-row-sha-v1"},
+        "event_id": {"const": "interface-v0.3-event-id"},
+        "name_order": {"const": "title-before-summary-before-source_page, evidence-start, raw-name-utf8"},
+        "materialization_order": {"const": "source-row-order then recovered-name-order"},
+        "source_page_quote_semantics": {
+          "const": "reviewed-overlay-excerpt; offsets-relative-to-excerpt-not-full-web-page"
+        },
+        "network_access": {"const": "none"}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

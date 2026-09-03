@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "interface_raw_investor_recovery_v1.schema.json",
+  "title": "Interface raw investor name recovery overlay record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_id",
+    "source_event_id",
+    "source_row_sha256",
+    "status",
+    "names"
+  ],
+  "properties": {
+    "schema_version": {"const": "interface-raw-investor-recovery-v1"},
+    "record_id": {"type": "string", "pattern": "^irn:[0-9a-f]{24}$"},
+    "source_event_id": {"type": "string", "pattern": "^int:[0-9a-f]{20}$"},
+    "source_row_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {
+      "enum": ["RECOVERED", "NO_IDENTIFIABLE_COUNTERPARTY", "AMBIGUOUS"]
+    },
+    "names": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/name"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "RECOVERED"}}, "required": ["status"]},
+      "then": {"properties": {"names": {"minItems": 1}}}
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "NO_IDENTIFIABLE_COUNTERPARTY"}},
+        "required": ["status"]
+      },
+      "then": {"properties": {"names": {"maxItems": 0}}}
+    }
+  ],
+  "$defs": {
+    "name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal", "raw_investor_name", "evidence"],
+      "properties": {
+        "ordinal": {"type": "integer", "minimum": 1},
+        "raw_investor_name": {"type": "string", "minLength": 1},
+        "evidence": {"$ref": "#/$defs/evidence"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_field",
+        "quote",
+        "quote_start",
+        "quote_end",
+        "name_start_in_quote",
+        "name_end_in_quote"
+      ],
+      "properties": {
+        "source_field": {"enum": ["title", "summary", "source_page"]},
+        "source_url": {"type": ["string", "null"]},
+        "quote": {"type": "string", "minLength": 1},
+        "quote_start": {"type": "integer", "minimum": 0},
+        "quote_end": {"type": "integer", "minimum": 1},
+        "name_start_in_quote": {"type": "integer", "minimum": 0},
+        "name_end_in_quote": {"type": "integer", "minimum": 1}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"source_field": {"const": "source_page"}},
+            "required": ["source_field"]
+          },
+          "then": {
+            "required": ["source_url"],
+            "properties": {"source_url": {"type": "string", "minLength": 1}}
+          },
+          "else": {"properties": {"source_url": {"type": "null"}}}
+        }
+      ]
+    }
+  }
+}

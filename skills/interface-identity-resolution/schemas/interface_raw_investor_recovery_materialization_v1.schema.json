@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "interface_raw_investor_recovery_materialization_v1.schema.json",
+  "title": "Interface raw investor name recovery materialization manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "source", "overlay", "canonical_exact_map", "algorithms",
+    "output", "statistics", "runtime_contract", "invariants"
+  ],
+  "properties": {
+    "schema_version": {"const": "interface-raw-investor-recovery-materialization-v1"},
+    "source": {"type": "object"},
+    "overlay": {"type": "object"},
+    "canonical_exact_map": {"type": ["object", "null"]},
+    "algorithms": {"type": "object"},
+    "output": {"type": "object"},
+    "statistics": {"type": "object"},
+    "runtime_contract": {"type": "object"},
+    "invariants": {"type": "object"}
+  }
+}

@@ -139,12 +139,13 @@ def dedup_lookup_key(name: str) -> str:
     return re.sub(r"\s+", " ", name).strip().casefold()
 
 
-def load_manual_dedup() -> dict:
+def load_manual_dedup(config: Path | None) -> dict:
     """Load manual company dedup rules: normalized alias key → canonical name."""
-    import yaml
-    config = Path(__file__).parent.parent / "configs" / "company_dedup_manual.yaml"
-    if not config.exists():
+    if config is None:
         return {}
+    import yaml
+    if not config.exists():
+        raise FileNotFoundError(f"manual alias config not found: {config}")
     rules = yaml.safe_load(config.read_text()) or []
     alias_to_canonical = {}
     for rule in rules:
@@ -167,6 +168,8 @@ def main():
                     help=f"Dir of *_v0.2.parquet edges_by_source files (default: {DEFAULT_EDGES_DIR})")
     ap.add_argument("--out", default=str(DEFAULT_OUTPUT_PATH),
                     help=f"Output companies_entity parquet path (default: {DEFAULT_OUTPUT_PATH})")
+    ap.add_argument("--manual-aliases", type=Path,
+                    help="Optional YAML file of canonical names and aliases; no aliases are applied by default")
     args = ap.parse_args()
     edges_dir = Path(args.edges_dir)
     output_path = Path(args.out)
@@ -175,7 +178,7 @@ def main():
     print("Scanning edges...")
     
     # Load manual dedup rules
-    manual_dedup = load_manual_dedup()
+    manual_dedup = load_manual_dedup(args.manual_aliases)
     if manual_dedup:
         print(f"  Loaded {len(manual_dedup)} manual dedup aliases")
     

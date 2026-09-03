@@ -1,120 +1,44 @@
 ---
 name: pattern-engine
-description: "Configuration-driven pattern recognition engine over entity event data. `analyze_chip_patterns_v01.py` is an analysis-only derived layer that reads versioned production Parquet tables (entity, investor, exposure, interface, chains), validates input contracts plus an external JSON Pattern specification, and writes auditable chain / company / investor / Pattern artifacts atomically (never mutating inputs). `generate_chip_pattern_candidates_v02.py` freezes a label-blind candidate grammar by projecting SAFE_* columns, validating checked-in schemas, and publishing a new directory atomically. Pure pyarrow engine, env-var overridable data dir, strongly-validating CLI. Use for CHIP pattern analysis, candidate generation, and config-driven event-pattern recognition on investor/company event chains. Trigger on: 'analyze CHIP patterns', 'run pattern engine', 'generate pattern candidates', 'evaluate event patterns'."
+description: Freeze label-blind event-chain pattern candidates, audit grammar coverage, evaluate frozen candidates, review equivalent or uninterpretable patterns, and build an auditable registry. Use for retrospective operating-action analysis over company event chains; RECOMMEND and AVOID apply to actions, not companies.
 ---
 
-# Pattern Engine — configuration-driven CHIP pattern recognition
+# Pattern Engine
 
-Deterministic, configuration-driven pattern recognition over entity event
-data. The engine never mutates its inputs; every artifact is written to a
-fresh output directory.
+Discover and evaluate event-chain Patterns without allowing outcome labels to
+influence candidate generation. Inputs are never mutated and derived artifacts
+are written atomically.
 
-## What it does
+## Workflow
 
-Two standalone scripts share a data-root default that is overridable via the
-`INVESTOR_BEHAVIOR_DATA_DIR` environment variable (falling back to
-`~/investor-behavior-analysis`):
+1. Freeze the bounded grammar before reading labels:
+   - `generate_chip_pattern_candidates_v01.py` builds the first compact lattice.
+   - `generate_chip_pattern_candidates_v02.py` adds the complementary event-anchor
+     and structural-atom pair sweep.
+2. Run `audit_chip_pattern_coverage_v01.py coverage` against any predefined
+   reference Patterns only after the freeze. This tests method coverage without
+   allowing reference outcomes into generation.
+3. Run its evaluation mode with the fixed equivalence margin. Interpret
+   `RECOMMEND` and `AVOID` as labels on operating actions represented by a
+   Pattern, never as company labels or predictions.
+4. Use `review_chip_batch3_results_v01.py` to remove invalid or
+   uninterpretable candidates and merge candidates selecting the same companies.
+   Supply freeze, evaluation, and output paths explicitly; use `--expected-count`
+   only when reproducing a pinned run.
+5. `generate_chip_pattern_registry_v01.py` reproduces the paper's three-batch
+   canonical CHIP registry and therefore retains strict published-snapshot
+   invariants. For a new universe, preserve its ordering, masks, review policy,
+   and provenance contract but define new expected counts.
+6. Run `analyze_chip_patterns_v01.py` for a caller-supplied Pattern specification
+   to materialize chain, company, investor, prevalence, identity-coverage, and
+   run-manifest outputs.
 
-### `analyze_chip_patterns_v01.py` (analysis core)
-
-Reads five versioned production Parquets:
-
-- entity (companies) table
-- investor table
-- exposure events
-- interface events
-- chain table
-
-It validates the input contract (company label consistency, chain window
-status, event references, column requirements) and an external JSON Pattern
-specification (`--pattern-spec-path` / `--pattern-config`), then derives:
-
-- `chain_ordered_features_v0.2.parquet`
-- `company_chain_profiles_v0.2.parquet`
-- `investor_interface_profiles_v0.2.parquet`
-- `interface_identity_rows_v0.2.parquet`
-- `pattern_prevalence_sf_v0.2.json`
-- `interface_identity_coverage_v0.2.json`
-- `summary_v0.2.md`
-- `chip_patterns_resolved_v0.1.json`
-- `run_manifest_v0.2.json`
-
-The output directory must not already exist (the engine refuses to overwrite),
-and it must not alias any input. Because every artifact is produced in a temp
-directory and `os.replace`d into place, a partial write never leaves a partial
-output behind.
-
-### `generate_chip_pattern_candidates_v02.py` (candidate grammar freezer)
-
-Label blind. It opens only the three supplied v0.3 tables (chains, exposure,
-interface), projects the `SAFE_*` columns, validates three caller-supplied JSON
-schemas, and publishes a frozen candidate grammar to a new `--output-dir`
-(required). No outcome labels or prior pattern/results are accepted.
-
-## Usage
-
-```bash
-# Analyze CHIP patterns from entity event data.
-# Defaults read Parquets under $INVESTOR_BEHAVIOR_DATA_DIR (or ~/investor-behavior-analysis).
-INVESTOR_BEHAVIOR_DATA_DIR=/path/to/data \
-python3 scripts/analyze_chip_patterns_v01.py \
-  --entity-path ... --investor-path ... \
-  --exposure-path ... --interface-path ... --chain-path ... \
-  --output-dir ./out \
-  --pattern-spec-path /path/to/pattern-spec.json \
-  --equivalence-margin 0.05
-```
-
-```bash
-# Freeze a label-blind candidate grammar from the three v0.3 tables.
-INVESTOR_BEHAVIOR_DATA_DIR=/path/to/data \
-python3 scripts/generate_chip_pattern_candidates_v02.py \
-  --chain-path ... --exposure-path ... --interface-path ... \
-  --chain-schema ... --exposure-schema ... --interface-schema ... \
-  --output-dir ./candidate-out \
-  --max-sequence-length 3 --min-chain-support 5 --min-company-support 5
-```
-
-Each CLI flag in both scripts remains fully functional; only the data-root
-default is env-var overridable.
-
-## Data location
-
-Set `INVESTOR_BEHAVIOR_DATA_DIR` to the directory containing the versioned
-Parquet tables when it is not the default `~/investor-behavior-analysis`.
-Individual input paths can still be passed explicitly per CLI flag.
+Read the candidate-lattice, batch-three, and registry contracts under `schemas/`
+before altering grammar limits, masks, ordering, or registry fields. Supply the
+three event schemas explicitly to generation commands.
 
 ## Requirements
 
-- Python 3.10+ (uses `from __future__ import annotations`, `dict[str, ...]` typing)
-- `pyarrow` (Parquet read/write)
-- `_common.py` (provides `make_slug` for the analyzer)
-
-The engine itself is deterministic and validates its inputs and config
-strictly; the `run_manifest_v0.2.json` records script/config/input sha256s,
-pyarrow version, and git provenance for auditability.
-
-The release does not bundle the study's exhaustive registry, 501-company analysis
-subset, or frozen pattern config. In the example above,
-`/path/to/pattern-spec.json` is a caller-supplied compatible config. Users must
-also supply the schema contracts shipped with the companion dataset; this skill
-reproduces the engine, not the paper's full pattern-analysis dataset.
-
-## Self-test
-
-Both scripts parse-compile cleanly:
-
-```bash
-python3 -m py_compile scripts/analyze_chip_patterns_v01.py
-python3 -m py_compile scripts/generate_chip_pattern_candidates_v02.py
-```
-
-Sanity-check the CLIs agree on defaults without touching data:
-
-```bash
-python3 scripts/generate_chip_pattern_candidates_v02.py --help
-python3 scripts/analyze_chip_patterns_v01.py --help
-```
-
-Run each against a real (or synthetic) set of versioned Parquet tables before
-relying on derived artifacts for downstream decisions.
+Python 3.10+ and `pyarrow`. Set `INVESTOR_BEHAVIOR_DATA_DIR` or pass every input
+path explicitly. Candidate generation must remain label-blind; evaluation begins
+only from a completed immutable freeze.
