@@ -14,7 +14,8 @@ firm's edges get lost or contaminated.
 The skill's job is CSS-selector authorship, not orchestration. The Python
 orchestrator (`scripts/generate_selectors.py`) handles: fetching HTML,
 selecting firms, invoking this skill per firm, and validating output. You
-only see one firm's HTML at a time.
+only see one firm's HTML at a time. Install BeautifulSoup, lxml, and PyYAML as
+listed in the repository README before running the helper scripts.
 
 ## Input
 
@@ -22,9 +23,8 @@ The orchestrator passes the **firm slug** and supplies project locations through
 `PORTFOLIO_CONFIG_PATH`, `PORTFOLIO_HTML_DIR`, and `PORTFOLIO_SCHEMA_PATH` (or
 equivalent command-line arguments). Firm metadata and paths are resolved
 via the helper scripts under this skill's `scripts/` directory (invoked
-through the Bash tool; do NOT re-implement in inline Python — the container
-has BeautifulSoup / lxml / PyYAML pre-installed and the scripts wrap them
-deterministically):
+through the Bash tool; do NOT re-implement them in inline Python—the scripts
+wrap BeautifulSoup / lxml / PyYAML deterministically):
 
 - `slug` — firm slug (e.g. `sequoia-capital`), passed via the prompt.
 - **Firm metadata** — obtain via

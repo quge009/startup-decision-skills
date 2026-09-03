@@ -74,11 +74,11 @@ Most skills are pure Python stdlib. A few need third-party packages:
 | entity-dedup | `pandas`, `pyarrow`, `pyyaml` |
 | event-chain-builder | `pandas`, `pyarrow` |
 | pattern-engine | `pyarrow` |
-| portfolio-selector-generator | `pyyaml` |
+| portfolio-selector-generator | `pyyaml`, `beautifulsoup4`, `lxml` |
 | web-screenshot-capture | `playwright`, `pillow` |
 
 ```bash
-pip install pandas pyarrow pyyaml playwright pillow
+pip install pandas pyarrow pyyaml beautifulsoup4 lxml playwright pillow
 ```
 
 ## License

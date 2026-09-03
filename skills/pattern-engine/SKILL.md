@@ -61,7 +61,7 @@ python3 scripts/analyze_chip_patterns_v01.py \
   --entity-path ... --investor-path ... \
   --exposure-path ... --interface-path ... --chain-path ... \
   --output-dir ./out \
-  --pattern-spec-path configs/chip_patterns_v0.1.json \
+  --pattern-spec-path /path/to/pattern-spec.json \
   --equivalence-margin 0.05
 ```
 
@@ -95,9 +95,10 @@ strictly; the `run_manifest_v0.2.json` records script/config/input sha256s,
 pyarrow version, and git provenance for auditability.
 
 The release does not bundle the study's exhaustive registry, 501-company analysis
-subset, or frozen pattern config. Users must supply a compatible config and the
-schema contracts shipped with the companion dataset; this skill reproduces the
-engine, not the paper's full pattern-analysis dataset.
+subset, or frozen pattern config. In the example above,
+`/path/to/pattern-spec.json` is a caller-supplied compatible config. Users must
+also supply the schema contracts shipped with the companion dataset; this skill
+reproduces the engine, not the paper's full pattern-analysis dataset.
 
 ## Self-test
 
