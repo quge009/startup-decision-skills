@@ -20,12 +20,14 @@ company that is absent from the supplied page.
    at most three times; record a null selector and explanation if the page cannot
    be represented safely.
 4. Run `scripts/ingest_vc_portfolio.py` against the cached HTML and selector
-   directory to write one source Parquet per investor.
+   directory to write one source Parquet per investor. Supply the firm list and
+   selector directory explicitly.
 5. Run `scripts/spot_check_edges.py` before accepting a source. Investigate
    navigation text, URL fragments, duplicate names, implausible counts, and
    systematically null optional fields.
-6. Run `scripts/build_edges_long.py` to merge accepted source tables and verify
-   uniqueness, investor foreign keys, and row-count reconciliation.
+6. Run `scripts/build_edges_long.py --investors ...` to merge accepted source
+   tables and verify uniqueness, investor foreign keys, and row-count
+   reconciliation.
 
 Read `schemas/edges_long_v0.1.spec.md` before changing fields or types. All
 project-specific firm lists, selector YAMLs, HTML caches, and output directories

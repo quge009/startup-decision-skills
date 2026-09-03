@@ -1,14 +1,14 @@
-"""M2-Step-10.3 v0.3: collect chip interface events into per-company JSON cache.
+"""Collect investor-company interface events into a JSON evidence cache.
 
-Split from build_interface_events_v03.py: this script has one job — for each
+This script has one job: for each
 requested company, run Tavily queries, extract events with the LLM, and write
 `<slug>.json` under CACHE_DIR. It does NOT produce the parquet output; run
-build_interface_events_v03.py separately for that.
+the interface-event builder separately for that.
 
 Usage:
     export TAVILY_API_KEY=...
     export OPENROUTER_API_KEY=...
-    python3 scripts/collect_interface_events_v03.py \\
+    python3 scripts/collect_interface_events.py \\
         --slugs cerebras-systems-inc,sambanova-systems,lightmatter,graphcore,syntiant \\
         [--force]
 """
@@ -37,9 +37,7 @@ EVENT_TYPE_GUIDE = "\n".join(
 )
 
 
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
-COMPANY_ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-CACHE_DIR = DATA_ROOT / "raw/interface_events_chip_v03"
+CACHE_DIR = Path(".")
 
 QUERY_TEMPLATES = [
     '"{company}" (board of directors OR director appointed OR chairman)',   # board_change
@@ -263,9 +261,9 @@ def main():
     ap.add_argument("--search-backend", type=str, default="tavily",
                     choices=["tavily", "serper"],
                     help="Search API backend: 'tavily' (default, requires TAVILY_API_KEY) or 'serper' (requires SERPER_API_KEY)")
-    ap.add_argument("--entity-path", type=str, default=str(COMPANY_ENTITY_PATH),
-                    help="Path to company entity parquet (default: companies_chip_subset_entity_v0.3.parquet)")
-    ap.add_argument("--cache-dir", type=str, default=str(CACHE_DIR),
+    ap.add_argument("--entity-path", type=str, required=True,
+                    help="Path to the company entity Parquet")
+    ap.add_argument("--cache-dir", type=str, required=True,
                     help="Directory for per-company JSON cache")
     args = ap.parse_args()
 

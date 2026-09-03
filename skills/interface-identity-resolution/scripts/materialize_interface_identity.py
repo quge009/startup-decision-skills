@@ -24,7 +24,7 @@ import pyarrow.parquet as pq
 
 RESEARCH_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from apply_interface_raw_investor_name_recovery_v01 import source_row_sha256  # noqa:E402
+from apply_interface_name_recovery import source_row_sha256  # noqa:E402
 
 PACKAGE_DEFAULT = RESEARCH_ROOT / "overlays/interface_counterparty_identity/v1"
 TMP_ROOT = Path("/tmp")
@@ -60,7 +60,7 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
+def load_jsonl(path: Path, *, allow_empty: bool = False) -> list[dict[str, Any]]:
     rows = []
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
@@ -69,7 +69,7 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
         if not isinstance(value, dict):
             raise ValueError(f"JSON object required at {path}:{number}")
         rows.append(value)
-    if not rows:
+    if not rows and not allow_empty:
         raise ValueError(f"empty JSONL: {path}")
     return rows
 
@@ -150,7 +150,9 @@ def validate_package(package_dir: Path, source: pa.Table, source_path: Path, inv
     if manifest.get("schema_version") != "interface-counterparty-identity-manifest-v1":
         raise ValueError("invalid package manifest schema_version")
     paths = {key: package_dir / name for key, name in PACKAGE_FILES.items()}
-    rows = {key: load_jsonl(path) for key, path in paths.items()}
+    required_rows = {"unique_name_decisions", "event_resolution_overlay"}
+    rows = {key: load_jsonl(path, allow_empty=key not in required_rows)
+            for key, path in paths.items()}
     for key, path in paths.items():
         lock = manifest["files"][key]
         if lock != {"path": path.name, "sha256": sha256_file(path), "records": len(rows[key])}:
@@ -464,7 +466,7 @@ def materialize(args: argparse.Namespace) -> dict[str, Any]:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--package-dir", type=Path, default=PACKAGE_DEFAULT)
+    parser.add_argument("--package-dir", type=Path, required=True)
     parser.add_argument("--source-interface-path", type=Path, required=True)
     parser.add_argument("--investors-entity-path", type=Path, required=True)
     parser.add_argument("--legacy-investors-entity-path", type=Path, required=True)

@@ -15,7 +15,7 @@ interfaces.
    `slug` through `--entity-path`.
 2. Set `TAVILY_API_KEY` and `OPENROUTER_API_KEY`. Optionally set
    `OPENROUTER_MODEL`, `OPENROUTER_URL`, and `INVESTOR_BEHAVIOR_DATA_DIR`.
-3. Run the relevant `collect_*_events_v03.py` with `--slugs` or `--limit` and an
+3. Run the relevant `collect_*_events.py` with `--slugs` or `--limit` and an
    explicit `--cache-dir`.
 4. Inspect source URLs and low-confidence extractions. Re-run a company with
    `--force` only when replacement is intended.

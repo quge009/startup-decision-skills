@@ -22,7 +22,7 @@ conflicts.
 ## Usage
 
 ```python
-from event_claim_resolution_v03 import resolve_event_claims
+from event_claim_resolution import resolve_event_claims
 
 canonical = resolve_event_claims(raw_claim_rows, event_id="evt-123")
 # -> canonical canonicalized fields + raw_claims trail + conflicts

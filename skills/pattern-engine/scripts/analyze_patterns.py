@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic, configuration-driven CHIP Pattern analysis artifacts.
+"""Build deterministic, configuration-driven event-chain Pattern artifacts.
 
 This analysis-only derived layer reads versioned production Parquets, never
 mutates them, and writes auditable Chain, company, Pattern, and investor
@@ -33,15 +33,7 @@ import pyarrow.parquet as pq
 from _common import make_slug
 
 RESEARCH_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")))
-DEFAULT_ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-DEFAULT_INVESTOR_PATH = DATA_ROOT / "investors_entity_v0.3.parquet"
-DEFAULT_EXPOSURE_PATH = DATA_ROOT / "exposure_events_chip_v0.3_clean_human_v0.2.parquet"
-DEFAULT_INTERFACE_PATH = DATA_ROOT / "interface_events_chip_v0.4_clean_human_v0.2_identity_patch_v1.parquet"
-DEFAULT_CHAIN_PATH = DATA_ROOT / "chains_chip_v0.3_clean_human_v0.2_identity_patch_v1.parquet"
-DEFAULT_OUTPUT_DIR = DATA_ROOT / "derived/chip_pattern_v0.2"
-DEFAULT_PATTERN_SPEC_PATH = RESEARCH_ROOT / "configs/chip_patterns_v0.1.json"
-DEFAULT_INTERFACE_SCHEMA_PATH = RESEARCH_ROOT / "schemas/interface_events_v0.4.schema.json"
+DEFAULT_INTERFACE_SCHEMA_PATH = RESEARCH_ROOT / "schemas/interface_events_v0.3.schema.json"
 
 VALID_WINDOW_STATUSES = {"dated", "unknown_end_date"}
 ACTION_VALUE_ALPHA = 0.05
@@ -1277,7 +1269,7 @@ def render_summary(prevalence: dict, identity: dict, pattern_set: PatternSet) ->
     margin = prevalence["equivalence_margin"]
     definitions = {definition.id: definition for definition in pattern_set.patterns}
     lines = [
-        "# CHIP Pattern Average Action Value v0.2", "",
+        "# Pattern Average Action Value", "",
         f"Pattern definitions: `{pattern_set.pattern_set_id}` (SHA-256 `{pattern_set.sha256}`).", "",
         "This deterministic observational baseline estimates each Pattern independently from multi-label signature presence.", "",
         "## Chain observability", "",
@@ -1321,15 +1313,15 @@ def render_summary(prevalence: dict, identity: dict, pattern_set: PatternSet) ->
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--entity-path", default=str(DEFAULT_ENTITY_PATH))
-    parser.add_argument("--investor-path", default=str(DEFAULT_INVESTOR_PATH))
-    parser.add_argument("--exposure-path", default=str(DEFAULT_EXPOSURE_PATH))
-    parser.add_argument("--interface-path", default=str(DEFAULT_INTERFACE_PATH))
-    parser.add_argument("--chain-path", default=str(DEFAULT_CHAIN_PATH))
-    parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
+    parser.add_argument("--entity-path", required=True)
+    parser.add_argument("--investor-path", required=True)
+    parser.add_argument("--exposure-path", required=True)
+    parser.add_argument("--interface-path", required=True)
+    parser.add_argument("--chain-path", required=True)
+    parser.add_argument("--output-dir", required=True)
     parser.add_argument(
         "--pattern-spec-path", "--pattern-config", dest="pattern_spec_path",
-        default=str(DEFAULT_PATTERN_SPEC_PATH),
+        required=True,
         help="validated external JSON Pattern specification",
     )
     parser.add_argument("--equivalence-margin", type=float, default=DEFAULT_EQUIVALENCE_MARGIN)
@@ -1490,7 +1482,7 @@ def main() -> None:
         (temp_dir / "interface_identity_coverage_v0.2.json").write_text(json.dumps(identity, indent=2, sort_keys=True, allow_nan=False) + "\n")
         (temp_dir / "summary_v0.2.md").write_text(render_summary(prevalence, identity, pattern_set))
         resolved_spec = pattern_set_payload(pattern_set)
-        (temp_dir / "chip_patterns_resolved_v0.1.json").write_text(json.dumps(resolved_spec, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
+        (temp_dir / "patterns_resolved.json").write_text(json.dumps(resolved_spec, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
         outputs = {path.name: output_metadata(path) for path in sorted(temp_dir.iterdir())}
         script_path = Path(__file__).resolve()
         common_path = script_path.parent / "_common.py"
@@ -1508,7 +1500,7 @@ def main() -> None:
                     "path": str(pattern_set.source_path), "sha256": pattern_set.sha256,
                     "content": resolved_spec, "config_schema_version": pattern_set.config_schema_version,
                     "pattern_set_id": pattern_set.pattern_set_id,
-                    "resolved_copy": "chip_patterns_resolved_v0.1.json",
+                    "resolved_copy": "patterns_resolved.json",
                 }
             },
             "inputs": {

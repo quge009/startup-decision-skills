@@ -1,4 +1,4 @@
-"""Build investor post-investment behavior features for the CHIP company subset.
+"""Build descriptive investor post-investment behavior features.
 
 This script is independent from Chain Pattern analysis. It performs no support
 filtering, clustering, ranking, or behavior classification. Every resolved
@@ -27,11 +27,6 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
-DEFAULT_INVESTOR_PATH = DATA_ROOT / "investors_entity_v0.3.parquet"
-DEFAULT_FUNDING_PATH = DATA_ROOT / "funding_events_chip_v0.3_clean_human_v0.2.parquet"
-DEFAULT_INTERFACE_PATH = DATA_ROOT / "interface_events_chip_v0.4_clean_human_v0.2_identity_patch_v1.parquet"
-DEFAULT_COMPANY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
 SCHEMA_VERSION = "investor-post-investment-behavior-v0.1.0"
 RELATION_STATUSES = (
     "CONFIRMED_POST_INVESTMENT",
@@ -968,10 +963,10 @@ def materialize(args: argparse.Namespace) -> dict[str, Any]:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--investor-path", default=str(DEFAULT_INVESTOR_PATH))
-    parser.add_argument("--funding-path", default=str(DEFAULT_FUNDING_PATH))
-    parser.add_argument("--interface-path", default=str(DEFAULT_INTERFACE_PATH))
-    parser.add_argument("--company-path", default=str(DEFAULT_COMPANY_PATH))
+    parser.add_argument("--investor-path", required=True)
+    parser.add_argument("--funding-path", required=True)
+    parser.add_argument("--interface-path", required=True)
+    parser.add_argument("--company-path", required=True)
     parser.add_argument("--output-dir", required=True)
     return parser.parse_args(argv)
 

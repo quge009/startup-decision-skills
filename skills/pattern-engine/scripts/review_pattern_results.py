@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Review frozen Batch 3 Patterns without changing generation or evaluation.
+"""Review frozen extended Patterns without changing generation or evaluation.
 
 The removal policy reads only frozen ASTs and generation metadata. Statistical
 fields are attached only after the retained candidate IDs and deterministic
@@ -26,17 +26,17 @@ STEP_NAMES = (
     "After merging Patterns matching the same companies",
 )
 FREEZE_FILES = (
-    "event_anchor_catalog_batch3_v1.json",
-    "structural_atom_catalog_batch3_v1.json",
-    "candidate_pairs_batch3_v1.json",
-    "candidate_representatives_batch3_v1.json",
-    "chip_candidates_batch3_frozen_v1.json",
-    "generation_manifest_batch3_v1.json",
+    "event_anchor_catalog.json",
+    "structural_atom_catalog.json",
+    "candidate_pairs.json",
+    "candidate_representatives.json",
+    "pattern_candidates_extended_frozen.json",
+    "generation_manifest.json",
 )
 
 # This value, rather than evaluation data, is the complete review policy input.
 POLICY = {
-    "version": "review_chip_batch3_results_v01",
+    "version": "review_pattern_results",
     "selection_inputs": ["frozen AST", "frozen pair metadata", "frozen component metadata"],
     "selection_forbidden_inputs": ["ATE", "p-value", "Result", "company outcome label"],
     "removal_precedence": [
@@ -439,7 +439,7 @@ def _validate_manifest(freeze_dir: Path, manifest: dict[str, Any], input_hashes:
     expected = manifest.get("counts", {}).get("frozen_pairs")
     if not isinstance(expected, int):
         raise ValueError("generation manifest has no frozen pair count")
-    if not (freeze_dir / "candidate_pairs_batch3_v1.json").is_file():
+    if not (freeze_dir / "candidate_pairs.json").is_file():
         raise ValueError("candidate pair artifact is missing")
 
 
@@ -448,9 +448,6 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
     freeze_dir = freeze_dir.expanduser().resolve()
     evaluation_path = evaluation_path.expanduser().resolve()
     output_path = output_path.expanduser().resolve()
-    tmp_root = Path("/tmp").resolve()
-    if output_path != tmp_root and tmp_root not in output_path.parents:
-        raise ValueError("review output must be under /tmp")
     if output_path.exists() and not overwrite:
         raise ValueError(f"refusing to overwrite existing output: {output_path}")
     paths = {name: freeze_dir / name for name in FREEZE_FILES}
@@ -459,17 +456,17 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
     if missing:
         raise ValueError(f"missing review inputs: {missing}")
     input_hashes = {name: sha256_file(path) for name, path in paths.items()}
-    manifest = _load_json(paths["generation_manifest_batch3_v1.json"])
+    manifest = _load_json(paths["generation_manifest.json"])
     _validate_manifest(freeze_dir, manifest, input_hashes)
 
-    anchors_payload = _load_json(paths["event_anchor_catalog_batch3_v1.json"])
-    structural_payload = _load_json(paths["structural_atom_catalog_batch3_v1.json"])
+    anchors_payload = _load_json(paths["event_anchor_catalog.json"])
+    structural_payload = _load_json(paths["structural_atom_catalog.json"])
     anchors = {item["id"]: item for item in anchors_payload.get("anchors", [])}
     structural = {item["id"]: item for item in structural_payload.get("atoms", [])}
     if len(anchors) != len(anchors_payload.get("anchors", [])) or len(structural) != len(structural_payload.get("atoms", [])):
         raise ValueError("duplicate component ID in frozen catalogs")
 
-    pair_payload = _load_json(paths["candidate_pairs_batch3_v1.json"])
+    pair_payload = _load_json(paths["candidate_pairs.json"])
     pairs = pair_payload.get("pairs")
     if not isinstance(pairs, list):
         raise ValueError("candidate pair artifact has no pairs list")

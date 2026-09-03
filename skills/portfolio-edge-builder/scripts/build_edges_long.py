@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
-"""W15 merge — combine 17 per-firm edge parquets → top-level edges_long_v0.1.parquet.
+"""Merge caller-supplied per-firm edge Parquets into an auditable table.
 
-M1-Step-2 W15 deliverable. Reads
-`/data/agents/investor-behavior-analysis/extracted/edges_by_source/*_v0.1.parquet`,
-concatenates all rows, verifies sanity invariants per `edges_long_v0.1.spec.md`
-(top-level tier), writes:
-
-  - `/data/agents/investor-behavior-analysis/edges_long_v0.1.parquet` — top-level merged
-  - `/data/agents/investor-behavior-analysis/reports/step2_coverage_v0.1.md` — coverage report
+Reads ``DATA_ROOT/extracted/edges_by_source/*_v0.1.parquet`` and validates the
+result against an explicitly supplied canonical investor table.
 
 Sanity invariants (fail-loud):
   - `(investor_id, edge_id)` composite unique across the file
-  - Every `investor_id` appears in `investors_entity_v0.1.parquet` (FK integrity)
+  - Every ``investor_id`` appears in the supplied investor table (FK integrity)
   - Per-firm row sum == top-level row count
 
-Idempotent: overwrites both output files on re-run.
-
-Usage:
-  python3 scripts/build_edges_long.py
+Output paths default below DATA_ROOT and may be overridden explicitly.
 """
 
 from __future__ import annotations
@@ -138,7 +130,7 @@ def write_coverage_report(
     n_empty = n_files - n_with_edges
 
     lines = [
-        "# Step 2 Coverage Report — v0.1",
+        "# Portfolio Edge Coverage Report",
         "",
         f"**Generated**: {run_date.isoformat()}",
         f"**Schema version**: v0.1.0",
@@ -146,7 +138,8 @@ def write_coverage_report(
         "## 1. Overall",
         "",
         f"- **Total edges**: {n:,}",
-        f"- **Firms with edges**: {n_with_edges} of 20 top VCs (empty parquet after null-selector: {n_empty}; not in per-firm files at all: {20 - n_files})",
+        f"- **Source files**: {n_files}",
+        f"- **Firms with edges**: {n_with_edges} (empty source tables: {n_empty})",
         f"- **Unique portfolio companies (by normalized name)**: {len(by_company):,}",
         f"- **Cross-firm shared companies (invested by ≥ 2 VCs)**: {len(shared):,}",
         "",
@@ -173,7 +166,7 @@ def write_coverage_report(
         "",
         "## 4. Cross-firm shared companies (top 20)",
         "",
-        "Companies backed by multiple VCs in our top-20 set — the raw material for co-investment network analysis in M3-M5.",
+        "Companies appearing under multiple investors, suitable for co-investment network analysis.",
         "",
         "| Company (normalized) | # co-investors | Investor slugs |",
         "|---|---:|---|",
@@ -184,19 +177,8 @@ def write_coverage_report(
     if not shared:
         lines.append("| *(none — no cross-firm shared companies detected)* | | |")
 
-    lines += [
-        "",
-        "## 5. Known caveats",
-        "",
-        "- **Sequoia 52 edges** — actual public \"All\" tab size. sanity_checks.min_edges tightened from gpt-5's initial 100 to a realistic 30 (W14 2026-07-30).",
-        "- **Insight Partners 12 edges** — page renders only image logos (no inline text names); `_clean_url_to_name()` heuristic parses basenames. Multi-word names preserved via `_`-join (`crew_ai`, `weights_biases`).",
-        "- **a16z 21 edges** — captures the featured-exits ticker only; full ~800-company portfolio lives in a `data-companies` JSON blob that requires JSON-aware extraction (deferred to v0.2 dispatcher path).",
-        "- **Kleiner Perkins 28 edges** — featured subset only (KP historically invested 500+; publicly displayed is a curated cross-section).",
-        "- **First Round 11 edges** — confirmed real (W14 investigation): First Round's public /companies page displays 11 marketing-showcase entries with \"Imagine if…\" narratives, not a full portfolio list. Not a selector defect.",
-        "- **3 firms have no edges**: Benchmark (no public portfolio), Tiger Global (their /investors is LP-login page), Battery (Playwright 60s timeout — rescuable with longer wait).",
-        "- **Company entity canonicalization deferred to M1-Step-3** (natural join point with Form D filings).",
-        "",
-    ]
+    lines += ["", "## 5. Interpretation", "",
+              "Coverage reflects only the supplied public pages and selector configurations; absence is not evidence that an investment did not occur.", ""]
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(lines))
@@ -205,13 +187,17 @@ def write_coverage_report(
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--data-root", default=str(DEFAULT_IBA_DATA))
+    ap.add_argument("--investors", required=True,
+                    help="Canonical investor entity Parquet used for FK validation")
+    ap.add_argument("--output", help="Merged Parquet path (default: DATA_ROOT/edges_long_v0.1.parquet)")
+    ap.add_argument("--report", help="Coverage report path (default: DATA_ROOT/reports/portfolio_edge_coverage.md)")
     args = ap.parse_args()
     data_root = Path(args.data_root)
 
     per_firm = load_all_per_firm(data_root)
     print(f"[load] {len(per_firm)} per-firm parquet(s) from {data_root/'extracted/edges_by_source'}")
 
-    canonical_ids = load_investor_ids(data_root / "investors_entity_v0.1.parquet")
+    canonical_ids = load_investor_ids(Path(args.investors))
     print(f"[canonical] {len(canonical_ids)} investor_ids loaded from entity parquet")
 
     merged = pa.concat_tables([t for _, t in per_firm])
@@ -220,11 +206,12 @@ def main() -> int:
     stats = verify_invariants(merged, per_firm, canonical_ids)
     print(f"[verify] OK — {stats}")
 
-    out_pq = data_root / "edges_long_v0.1.parquet"
+    out_pq = Path(args.output) if args.output else data_root / "edges_long_v0.1.parquet"
+    out_pq.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(merged, out_pq, compression="snappy")
     print(f"[wrote parquet] {out_pq} ({out_pq.stat().st_size / 1024:.1f} KB)")
 
-    out_md = data_root / "reports" / "step2_coverage_v0.1.md"
+    out_md = Path(args.report) if args.report else data_root / "reports" / "portfolio_edge_coverage.md"
     write_coverage_report(merged, per_firm, out_md, dt.date.today())
     print(f"[wrote report] {out_md} ({out_md.stat().st_size / 1024:.1f} KB)")
 

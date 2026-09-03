@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post-freeze audit/evaluation for label-blind CHIP candidate lattices.
+"""Post-freeze audit/evaluation for label-blind Pattern candidate lattices.
 
 `coverage` is the only path that loads a reference Pattern configuration.  It
 materializes canonical candidates from the already-frozen atom lattice and
@@ -22,12 +22,11 @@ from typing import Any, Iterable
 
 import pyarrow.parquet as pq
 
-import analyze_chip_patterns_v01 as engine
-import generate_chip_pattern_candidates_v01 as generator
-import generate_chip_pattern_candidates_v02 as batch3_generator
+import analyze_patterns as engine
+import generate_pattern_candidates as generator
+import generate_pattern_candidates_extended as extended_generator
 
 RESEARCH_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_REFERENCE = RESEARCH_ROOT / "configs/chip_patterns_v0.1.json"
 
 
 def _load_json(path: Path) -> Any:
@@ -39,15 +38,15 @@ def _load_json(path: Path) -> Any:
 
 def load_freeze(freeze_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     freeze_dir = freeze_dir.expanduser().resolve()
-    is_batch3 = (freeze_dir / "generation_manifest_batch3_v1.json").is_file()
-    if is_batch3:
-        manifest_path = freeze_dir / "generation_manifest_batch3_v1.json"
-        lattice_path = freeze_dir / "candidate_pairs_batch3_v1.json"
-        frozen_path = freeze_dir / "chip_candidates_batch3_frozen_v1.json"
+    is_extended = (freeze_dir / "generation_manifest.json").is_file()
+    if is_extended:
+        manifest_path = freeze_dir / "generation_manifest.json"
+        lattice_path = freeze_dir / "candidate_pairs.json"
+        frozen_path = freeze_dir / "pattern_candidates_extended_frozen.json"
     else:
         manifest_path = freeze_dir / "generation_manifest_v0.1.json"
         lattice_path = freeze_dir / "candidate_lattice_v0.1.json"
-        frozen_path = freeze_dir / "chip_candidates_frozen_v0.1.json"
+        frozen_path = freeze_dir / "pattern_candidates_frozen.json"
     manifest, lattice, frozen = map(_load_json, (manifest_path, lattice_path, frozen_path))
     for name, metadata in manifest.get("outputs", {}).items():
         path = freeze_dir / name
@@ -58,7 +57,7 @@ def load_freeze(freeze_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
             raise ValueError(f"freeze integrity failure for {name}: {actual} != {metadata['sha256']}")
     if manifest["phase"] != "LABEL_BLIND_GENERATION_FREEZE":
         raise ValueError("input is not a label-blind generation freeze")
-    expected = (batch3_generator.COMPLETENESS_STATUS if is_batch3 else "COMPLETE_BOUNDED_COMPACT_GRAMMAR")
+    expected = (extended_generator.COMPLETENESS_STATUS if is_extended else "COMPLETE_BOUNDED_COMPACT_GRAMMAR")
     if manifest["completeness"]["status"] != expected:
         raise ValueError("cannot audit an incomplete candidate grammar")
     return manifest, lattice, frozen
@@ -66,28 +65,28 @@ def load_freeze(freeze_dir: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
 
 def read_contexts(manifest: dict[str, Any], *, with_labels: bool) -> tuple[list[engine.ChainRuleContext], list[str], list[str | None]]:
     paths = {name: Path(item["path"]) for name, item in manifest["inputs"].items()}
-    is_batch3 = manifest.get("generation_version") == "batch3_v1"
-    source = batch3_generator if is_batch3 else generator
+    is_extended = manifest.get("generation_version") == "extended_v1"
+    source = extended_generator if is_extended else generator
     for name, path in paths.items():
-        if is_batch3:
+        if is_extended:
             columns = manifest["inputs"][name]["projected_columns"]
-            actual = batch3_generator.digest_json(pq.read_table(path, columns=columns).to_pylist())
+            actual = extended_generator.digest_json(pq.read_table(path, columns=columns).to_pylist())
         else:
             actual = engine.sha256_file(path)
         if actual != manifest["inputs"][name]["sha256"]:
             raise ValueError(f"post-freeze input hash drift for {name}: {actual}")
-    chain_columns = list(source.SAFE_CHAIN_COLUMNS if is_batch3 else source.CHAIN_COLUMNS)
+    chain_columns = list(source.SAFE_CHAIN_COLUMNS if is_extended else source.CHAIN_COLUMNS)
     label_field = "company_label_v4"
     if with_labels:
         chain_columns.append(label_field)
     chains = pq.read_table(paths["chains"], columns=chain_columns).to_pylist()
-    exposure_columns = source.SAFE_EXPOSURE_COLUMNS if is_batch3 else source.EXPOSURE_COLUMNS
-    interface_columns = source.SAFE_INTERFACE_COLUMNS if is_batch3 else source.INTERFACE_COLUMNS
+    exposure_columns = source.SAFE_EXPOSURE_COLUMNS if is_extended else source.EXPOSURE_COLUMNS
+    interface_columns = source.SAFE_INTERFACE_COLUMNS if is_extended else source.INTERFACE_COLUMNS
     exposure = pq.read_table(paths["exposure"], columns=list(exposure_columns)).to_pylist()
     interface = pq.read_table(paths["interface"], columns=list(interface_columns)).to_pylist()
     lookup = engine.build_event_lookup(exposure, interface)
     ordered = sorted(chains, key=lambda row: (row["company_id"], row["chain_sequence"], row["chain_id"]))
-    contexts = engine.build_chain_rule_contexts(ordered, lookup) if is_batch3 else [
+    contexts = engine.build_chain_rule_contexts(ordered, lookup) if is_extended else [
         engine.build_chain_rule_context(row, lookup) for row in ordered
     ]
     companies = [row["company_id"] for row in ordered]
@@ -226,7 +225,7 @@ def coverage(args: argparse.Namespace) -> dict[str, Any]:
 
 def coverage_markdown(result: dict[str, Any]) -> str:
     lines = [
-        "# CHIP Candidate Post-Freeze Coverage Audit", "",
+        "# Pattern Candidate Post-Freeze Coverage Audit", "",
         f"Result: **{result['result']}**", "",
         "Criterion: exact Chain exposure and dated/evaluable-company-any exposure masks.", "",
         "| Reference | Status | Candidate | Chain support | Company support |",
@@ -250,7 +249,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     freeze_dir = Path(args.freeze_dir).expanduser().resolve()
     manifest, lattice, frozen = load_freeze(freeze_dir)
     pair_metadata = {item["id"]: item for item in lattice["pairs"]}
-    if manifest.get("generation_version") != "batch3_v1":
+    if manifest.get("generation_version") != "extended_v1":
         raise ValueError("evaluate is reserved for the Batch3 explicit pair freeze")
     contexts, companies, labels = read_contexts(manifest, with_labels=True)
     company_labels: dict[str, str] = {}
@@ -265,7 +264,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     cohort_set = set(cohort)
     success_total = sum(company_labels[company] == "SUCCESS" for company in cohort)
     failure_total = len(cohort) - success_total
-    representative_payload = _load_json(freeze_dir / "candidate_representatives_batch3_v1.json")
+    representative_payload = _load_json(freeze_dir / "candidate_representatives.json")
     candidate_to_rep = representative_payload["candidate_to_representative"]
     definitions = {item["id"]: item for item in frozen["patterns"]}
     representative_ids = sorted(set(candidate_to_rep.values()))
@@ -300,7 +299,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "company_support": pair_metadata[candidate_id]["company_support"],
             **metrics_by_rep[representative_id],
         }
-        if track == batch3_generator.DESCRIPTIVE_ASSOCIATION:
+        if track == extended_generator.DESCRIPTIVE_ASSOCIATION:
             action_result = row.pop("result", None)
             row["result"] = {
                 "RECOMMEND": "POSITIVE_ASSOCIATION", "AVOID": "NEGATIVE_ASSOCIATION",
@@ -317,7 +316,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         raise AssertionError("every frozen Batch3 pair must receive exactly one evaluation row")
     result_counts = Counter(row.get("result") or row["status"] for row in rows)
     result = {
-        "evaluation_version": "batch3_v1_delta005", "mode": "POST_FREEZE_LABELLED_TWO_TRACK_EVALUATION",
+        "evaluation_version": "extended_v1", "mode": "POST_FREEZE_LABELLED_TWO_TRACK_EVALUATION",
         "delta": 0.05, "statistics_algorithm": "two_proportion_chi_square_plus_TOST_v1",
         "candidate_count": len(rows), "representative_computations": len(metrics_by_rep),
         "observable_cohort": {"SUCCESS": success_total, "FAILURE": failure_total},
@@ -352,7 +351,7 @@ def parser() -> argparse.ArgumentParser:
     sub = result.add_subparsers(dest="command", required=True)
     audit = sub.add_parser("coverage", help="load reference rules only after freeze and verify exact masks")
     audit.add_argument("--freeze-dir", required=True)
-    audit.add_argument("--reference-config", default=str(DEFAULT_REFERENCE))
+    audit.add_argument("--reference-config", required=True)
     audit.add_argument("--output", required=True)
     audit.add_argument("--markdown", action="store_true")
     scoring = sub.add_parser("evaluate", help="evaluate eager frozen candidates using labels after freeze")

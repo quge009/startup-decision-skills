@@ -356,10 +356,7 @@ SOURCE_PRIORITY = {"wikidata": 0, "findfunding": 1, "manual_seed": 2, "url_verif
 # Investor ID lookup (M2-Step-6: canonical investor_id from entity table)
 # ─────────────────────────────────────────────────────────────────────────
 
-_ENTITY_PATH = os.environ.get(
-    "INVESTOR_ENTITY_PATH",
-    str(Path.home() / "investor-behavior-analysis/investors_entity_v0.3.parquet"),
-)
+_ENTITY_PATH = os.environ.get("INVESTOR_ENTITY_PATH")
 _INVESTOR_ID_CACHE = None
 
 
@@ -376,9 +373,11 @@ def load_investor_id_map() -> dict[str, str]:
     import pyarrow.parquet as pq
     from pathlib import Path
     
+    if not _ENTITY_PATH:
+        raise RuntimeError("set INVESTOR_ENTITY_PATH to the canonical investor Parquet")
     p = Path(_ENTITY_PATH)
     if not p.exists():
-        raise FileNotFoundError(f"Entity table not found: {p}. Run ingest_m2_seeds.py first.")
+        raise FileNotFoundError(f"investor entity table not found: {p}")
     
     df = pq.read_table(p, columns=["investor_id", "name"]).to_pandas()
     _INVESTOR_ID_CACHE = {make_slug(row["name"]): row["investor_id"] for _, row in df.iterrows()}

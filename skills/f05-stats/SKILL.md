@@ -23,14 +23,13 @@ precision matters more than recall), Wilson 95% confidence intervals, the
 
 ```bash
 # F0.5 stats over a results CSV (columns per the results schema)
-python3 scripts/cb_step_l_f05_stats.py <results.csv> [--split train|val|all]
-python3 scripts/cb_step_l_f05_stats.py                  # reads train + val
+python3 scripts/compute_f05_stats.py <results.csv>
 ```
 
 Import in Python:
 
 ```python
-from cb_step_l_f05_stats import f_beta, wilson_ci, f05_ci_via_pr_ci, cell_for
+from compute_f05_stats import f_beta, wilson_ci, f05_ci_via_pr_ci, cell_for
 f05 = f_beta(precision, recall, beta=0.5)
 ```
 

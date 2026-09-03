@@ -1,35 +1,27 @@
 #!/usr/bin/env python3
-"""W13 dispatcher — apply per-firm selector yamls to cached HTML → per-firm edges parquet.
+"""Apply caller-supplied selector YAMLs to cached portfolio-page HTML.
 
-M1-Step-2 W13 deliverable. Reads `configs/top20_vc_portfolio.yaml` for the
-20-firm list + per-firm selector yamls at `configs/portfolio_selectors/<slug>.yaml`,
-applies each selector via BeautifulSoup to the cached HTML at
-`/data/agents/investor-behavior-analysis/raw/portfolio_html/<latest-date>/<slug>.html`,
-and emits one parquet per firm at
-`/data/agents/investor-behavior-analysis/extracted/edges_by_source/<slug>_v0.1.parquet`
-conforming to `schemas/edges_long_v0.1.spec.md` (15 columns).
+The command reads an explicit firm-list YAML and selector directory, resolves
+cached HTML below DATA_ROOT, and emits one schema-conformant Parquet per firm.
 
-Design (per user Q1-Q4 sign-off 2026-07-30):
-- Q1-A: Insight-style image-URL names (`.../databricks-horizontal.webp`) are
+Design:
+- Image-URL names (`.../databricks-horizontal.webp`) are
   parsed into clean company names via URL-basename heuristic (basename → drop
   image extension → split on `-` or `_` → take first segment). Applied whenever
   the raw extracted name starts with `http://` or `https://`.
-- Q2-A: `company_normalized_name` (via _common.normalize_name) and
+- `company_normalized_name` (via _common.normalize_name) and
   `company_domain` (via _common.extract_domain from company_url) are computed
   here — downstream (W15 merge, M3 features) reads canonical form directly.
-- Q3-B: sanity-check row count vs `sanity_checks.min_edges/max_edges` in yaml;
+- Sanity-check row count vs `sanity_checks.min_edges/max_edges` in YAML;
   on violation, print a warning and continue (do NOT block the run — one bad
-  firm shouldn't kill 19 good ones).
-- Q4: pure Python script (no LLM, no container). This makes W13 usable at
-  M2 500-2000-firm scale without per-firm API cost.
+  firm does not stop unrelated firms).
+- Pure Python execution: no LLM or container is required.
 
 Idempotent: overwrites per-firm parquet on re-run (per edges_long_v0.1 spec Q4
 policy — latest scrape wins; audit history via raw HTML snapshots).
 
-Usage:
-    python3 scripts/ingest_vc_portfolio.py
-    python3 scripts/ingest_vc_portfolio.py --firm sequoia-capital
-    python3 scripts/ingest_vc_portfolio.py --date 2026-07-29
+Run with ``--top20 FIRMS.yaml --selectors-dir SELECTORS`` and optional firm/date
+filters. The historical option name ``--top20`` accepts any bounded firm list.
 """
 
 from __future__ import annotations
@@ -56,8 +48,6 @@ from _common import normalize_name, extract_domain
 # ─────────────────────────────────────────────────────────────────────────
 
 REPO_ROOT = Path(__file__).parent.parent
-DEFAULT_TOP20 = REPO_ROOT / "configs" / "top20_vc_portfolio.yaml"
-DEFAULT_SELECTORS_DIR = REPO_ROOT / "configs" / "portfolio_selectors"
 DEFAULT_IBA_DATA = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
 SCHEMA_VERSION = "v0.1.0"
 
@@ -423,10 +413,10 @@ def write_per_firm_parquet(rows: list[dict], out_path: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--firm", help="Only process one firm (slug); default: all 20")
-    ap.add_argument("--top20", default=str(DEFAULT_TOP20),
-                    help=f"Path to top20_vc_portfolio.yaml (default: {DEFAULT_TOP20})")
-    ap.add_argument("--selectors-dir", default=str(DEFAULT_SELECTORS_DIR),
-                    help=f"Selector yamls dir (default: {DEFAULT_SELECTORS_DIR})")
+    ap.add_argument("--top20", required=True,
+                    help="Path to caller-supplied investor/portfolio metadata YAML")
+    ap.add_argument("--selectors-dir", required=True,
+                    help="Directory containing caller-supplied selector YAML files")
     ap.add_argument("--data-root", default=str(DEFAULT_IBA_DATA),
                     help=f"IBA data root (default: {DEFAULT_IBA_DATA})")
     ap.add_argument("--date", default=None,

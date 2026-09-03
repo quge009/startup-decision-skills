@@ -13,7 +13,7 @@ the calling driver's responsibility (reads `aggregate.json` +
 `reasoning.json` per working dir).
 
 **v1.5a vs v1.5**: PASS_THRESHOLD lowered 0.75 → 0.50 in `aggregate.py`
-per pipeline_benchmark iter 3 / iter 4 calibration finding. Score formula,
+using a frozen, documented calibration threshold. Score formula,
 M/U-check, archetype handling, retrieval window — all unchanged.
 
 This skill internally invokes three sibling skills (`candidate-classifier`,

@@ -1,4 +1,4 @@
-"""Comprehensive outcome-label leakage scan for pool 1 candidate cards.
+"""Scan candidate-card inputs for outcome-label leakage.
 
 Purpose: A4 preprocessing generates candidate_card.md from Crunchbase categories +
 website_body_text (fetched 2026-06-29). This scrape captures CURRENT state, not
@@ -27,6 +27,7 @@ Output:
   - /tmp/leakage_scan_report.md — human-readable summary + samples
 """
 
+import argparse
 import csv
 import json
 import os
@@ -36,16 +37,6 @@ from pathlib import Path
 from collections import Counter, defaultdict
 
 csv.field_size_limit(sys.maxsize)
-
-POOL_1_DIR = Path(os.environ.get(
-    "POOL_1_DIR", str(Path.home() / "_data/pipeline_benchmark/crunchbase_filtered")))
-POOL_1_CSVS = [
-    POOL_1_DIR / "a5_train_results_v15a_iter4.csv",
-    POOL_1_DIR / "a5_train_results_v15a_iter5.csv",
-]
-CARDS_DIR = Path(os.environ.get("CARDS_DIR", str(Path.home() / "workspace_a4_cards/working")))
-OUT_JSON = Path(os.environ.get("LEAKAGE_OUT_JSON", "/tmp/leakage_scan_output.json"))
-OUT_MD = Path(os.environ.get("LEAKAGE_OUT_MD", "/tmp/leakage_scan_report.md"))
 
 SUCCESS_TRUTH = {"POSITIVE_IPO", "POSITIVE_LATE_STAGE_FUNDED",
                  "POSITIVE_ACQUIRED", "EQUIVOCAL_DELISTED"}
@@ -304,9 +295,9 @@ def truth_class(outcome):
     return None
 
 
-def load_pool1():
+def load_pool1(paths):
     rows = []
-    for p in POOL_1_CSVS:
+    for p in paths:
         for r in csv.DictReader(open(p)):
             tc = truth_class(r.get("outcome_label", ""))
             if tc is None: continue
@@ -315,8 +306,14 @@ def load_pool1():
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--results-csv", type=Path, action="append", required=True)
+    parser.add_argument("--cards-dir", type=Path, required=True)
+    parser.add_argument("--output-json", type=Path, required=True)
+    parser.add_argument("--output-markdown", type=Path, required=True)
+    args = parser.parse_args()
     print("Loading pool 1...", flush=True)
-    pool1 = load_pool1()
+    pool1 = load_pool1(args.results_csv)
     print(f"  {len(pool1)} rows")
 
     print("\nScanning candidate cards for leakage...", flush=True)
@@ -327,7 +324,7 @@ def main():
     by_outcome = defaultdict(Counter)
 
     for i, row in enumerate(pool1):
-        card_path = CARDS_DIR / row["id"] / "candidate_card.md"
+        card_path = args.cards_dir / row["id"] / "candidate_card.md"
         if not card_path.exists():
             n_missing += 1
             continue
@@ -392,11 +389,13 @@ def main():
         "pattern_totals": dict(pattern_totals),
         "rows": results,
     }
-    OUT_JSON.write_text(json.dumps(save_data, indent=2, default=str))
-    print(f"\nSaved: {OUT_JSON}")
+    args.output_json.parent.mkdir(parents=True, exist_ok=True)
+    args.output_json.write_text(json.dumps(save_data, indent=2, default=str))
+    print(f"\nSaved: {args.output_json}")
 
     # Write markdown report
-    with open(OUT_MD, "w") as f:
+    args.output_markdown.parent.mkdir(parents=True, exist_ok=True)
+    with args.output_markdown.open("w") as f:
         f.write(f"# Pool 1 Candidate Card Leakage Scan\n\n")
         f.write(f"**Total rows scanned**: {len(results)} / {len(pool1)}\n\n")
         f.write(f"## Severity distribution\n\n")
@@ -429,7 +428,7 @@ def main():
                                 f.write(f"  - {section}.{cat}.{pat}: {matches[:3]}\n")
                 f.write("\n")
 
-    print(f"Report: {OUT_MD}")
+    print(f"Report: {args.output_markdown}")
 
 
 if __name__ == "__main__":

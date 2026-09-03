@@ -1,27 +1,9 @@
-"""Aggregate M/U verdicts into final verdict (v1.5a).
+"""Aggregate market and uniqueness checks into a final verdict.
 
-v1.5a changes from v1.5 (per pipeline_benchmark iter 3 §5.8 + iter 4 finding):
-  - PASS_THRESHOLD lowered 0.75 → 0.50. Reason: iter 3 + iter 5 (two
-    independent 198-samples) showed v1.5's M/U-check never produces
-    weighted_score ≥ 0.75 in practice; the score distribution lives in
-    {0.0, 0.25, 0.5} buckets. Threshold 0.50 calibrates to empirical sweet
-    spot; iter 6 measured F0.5=0.616 on independent sample.
-  - Everything else from v1.5 unchanged (no H-check; archetype is metadata;
-    M/U archetype-agnostic; time-bounded retrieval; score-threshold path).
-
-v1.5 changes from v1.4 (per pipeline_benchmark iter 1 §6.2 Decision A):
-  - Drop H-check entirely (was archetype-conditional; 2/7 archetypes had method).
-  - Drop archetype-keyed weight lookup; weights are uniform M=0.5, U=0.5.
-    Archetype remains in output as METADATA only — no compute uses it.
-  - Drop OUT_OF_SCOPE short-circuit. Every candidate produces a verdict.
-  - Drop the 5-path conjunction rule (all_pass / weight_aware_fail /
-    two_or_more_warn / one_warn / score_threshold) calibrated for 3 dims.
-    v1.5 uses score-threshold only (Q1 option A from iter 1 §6.2 review).
-
-Score formula (v1.5+):
+Score formula:
   score = 0.5 · M + 0.5 · U,   where verdict→num: PASS=1.0, WARN=0.5, FAIL=0.0
 
-Verdict thresholds (v1.5a):
+Verdict thresholds:
   score ≥ 0.50  → PASS
   0.25 ≤ score < 0.50  → WARN
   score < 0.25  → FAIL
@@ -42,17 +24,16 @@ VERDICT_TO_EMOJI = {
     "FAIL": "🔴",
 }
 
-# Uniform weights — archetype-agnostic per v1.5 Decision A #3.
+# Uniform, archetype-agnostic weights.
 WEIGHT_M = 0.5
 WEIGHT_U = 0.5
 
-# v1.5a: lowered from 0.75 (v1.5) per iter 4 finding.
 PASS_THRESHOLD = 0.50
 WARN_THRESHOLD = 0.25  # below this → FAIL; at-or-above → WARN (up to PASS_THRESHOLD)
 
 
 def aggregate(m_verdict: str, u_verdict: str) -> dict:
-    """Compute weighted score + verdict for v1.5a (M+U only, score-based, PASS≥0.50)."""
+    """Compute an M/U weighted score and thresholded verdict."""
     m_num = VERDICT_TO_NUM[m_verdict]
     u_num = VERDICT_TO_NUM[u_verdict]
     score = WEIGHT_M * m_num + WEIGHT_U * u_num

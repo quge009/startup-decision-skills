@@ -1,17 +1,17 @@
-# Schema: `funding_events_chip_v0.3.parquet`
+# Schema: funding events v0.3
 
 **Version:** v0.3.0
 
-**Collector:** `scripts/collect_funding_events_v03.py`
+**Collector:** `collect_funding_events.py` in the event-evidence-collector skill
 
-**Builder:** `scripts/build_funding_events_v03.py`
+**Builder:** `build_funding_events.py` in the event-chain-builder skill
 
 **Company FK:** caller-supplied company entity table
 **Machine-readable schema:** `schemas/funding_events_v0.3.schema.json` (authoritative machine contract loaded directly by the builder)
 
 ## Purpose and v0.2 changes
 
-One row per participant in a chip-company funding-level outcome. v0.3 makes the company relationship stable and repairs implementation drift in v0.2:
+One row per participant in a company funding-level outcome.
 
 - adds required `company_id` rather than relying on normalized-name remapping;
 - materializes the previously specified but omitted `source_url` and `schema_version` columns;
@@ -24,7 +24,7 @@ One row per participant in a chip-company funding-level outcome. v0.3 makes the 
 | # | Column | Arrow type | Nullable | Contract |
 |---:|---|---|:---:|---|
 | 1 | `event_id` | `large_string` | No | PK; `fund:<sha1-prefix>` |
-| 2 | `company_id` | `large_string` | No | FK to chip company entity v0.3 |
+| 2 | `company_id` | `large_string` | No | FK to the supplied company entity table |
 | 3 | `investor_id` | `large_string` | Yes | FK to investors entity v0.2 when matched |
 | 4 | `investor_name` | `large_string` | Yes | Matched participant name |
 | 5 | `raw_investor_name` | `large_string` | Yes | Participant/acquirer text from extraction |
@@ -47,7 +47,7 @@ One row per participant in a chip-company funding-level outcome. v0.3 makes the 
 | 22 | `data_source` | `large_string` | No | `<search_backend>+deepseek` |
 | 23 | `metadata_json` | `large_string` | No | Raw extraction plus migration provenance |
 
-Schema metadata contains `schema_version=v0.3.0` and `company_entity=companies_chip_subset_entity_v0.3.parquet`.
+Schema metadata contains `schema_version=v0.3.0` and identifies the company entity contract.
 
 ## `event_type` enum
 
@@ -55,6 +55,5 @@ Schema metadata contains `schema_version=v0.3.0` and `company_entity=companies_c
 
 ## Cache compatibility and provenance
 
-The first 166-company cache tranche was produced by `collect_funding_events_v02.py`. It is accepted as an explicit compatibility migration because its event fields are a subset of v0.3. Migrated rows use `source_table=web_search_v02`; unavailable `source_url` values remain null; `metadata_json.cache_migration` is `v0.2-compatible`. This does not claim that those caches were produced by the v0.3 collector. Future collection and retries use `collect_funding_events_v03.py`, which includes source URLs in the LLM evidence and records `source_type`.
 
 The builder defaults to refusing an existing output. Replacement requires `--force-output`.

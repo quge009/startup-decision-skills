@@ -37,13 +37,13 @@ truths (INDETERMINATE, UNKNOWN) land in `FILTER_*` diagnostic cells.
 
 ```bash
 # The outcome-label mapping + verdict-truth bridge are pure functions.
-python3 scripts/cb_outcome_label.py   # runs the full 30-case self-test
+python3 scripts/outcome_label.py   # runs the full 30-case self-test
 ```
 
 Import in Python:
 
 ```python
-from cb_outcome_label import outcome_label_mapping, verdict_outcome_evaluation_class
+from outcome_label import outcome_label_mapping, verdict_outcome_evaluation_class
 label = outcome_label_mapping(row_dictionary)
 cell  = verdict_outcome_evaluation_class(verdict, label)
 ```
@@ -54,6 +54,6 @@ Pure Python stdlib (`re`, `datetime`). No external deps.
 
 ## Self-test
 
-`python3 scripts/cb_outcome_label.py` runs a 30-case regression self-test
+`python3 scripts/outcome_label.py` runs a 30-case regression self-test
 and exits non-zero if any case regresses. Run before upstream batch jobs
 depend on the labeling.

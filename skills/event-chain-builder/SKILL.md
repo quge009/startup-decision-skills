@@ -15,17 +15,17 @@ dated exposure/interface middle events into one chain row per outcome.
 Three event builders read per-company JSON caches written by the matching v0.3
 collectors and emit schema-contract-typed parquet:
 
-- `build_funding_events_v03.py` — funding outcomes (round / failed / withdrawn /
+- `build_funding_events.py` — funding outcomes (round / failed / withdrawn /
   acquired / ipo_* / company_closed). Explodes lead + co-investors into
   participant rows, matches investor IDs, resolves event claims, and tags a
   `fund:...` event_id per participant.
-- `build_exposure_events_v03.py` — exposure events (product_launch, customer_change,
+- `build_exposure_events.py` — exposure events (product_launch, customer_change,
   regulatory, supply_chain, ...). Emits `exp:...` event_ids.
-- `build_interface_events_v03.py` — investor-company relationship events
+- `build_interface_events.py` — investor-company relationship events
   (board_change, funding_participation, strategic_investment, ...). Resolves
   investor IDs, emits `int:...` event_ids.
 
-`build_chains_v03.py` chains them into `chain:...` rows. Each unique funding
+`build_chains.py` chains them into `chain:...` rows. Each unique funding
 outcome (company, outcome_type, round_name, announce_date) becomes one chain end;
 participant rows collapse into a single chain row, and dated exposure/interface
 events falling in the preceding temporal window are attached to it. Undated
@@ -47,16 +47,17 @@ types.
 export INVESTOR_BEHAVIOR_DATA_DIR=/your/data/investor-behavior-analysis
 
 # Build each event family from its v0.3 collector JSON cache.
-python3 scripts/build_funding_events_v03.py
-python3 scripts/build_exposure_events_v03.py
-python3 scripts/build_interface_events_v03.py
+python3 scripts/build_funding_events.py --entity-path ... --cache-dir ... --output-path ...
+python3 scripts/build_exposure_events.py --entity-path ... --cache-dir ... --output-path ...
+python3 scripts/build_interface_events.py --entity-path ... --cache-dir ... --output-path ...
 
 # Chain them into chain:... records.
-python3 scripts/build_chains_v03.py
+python3 scripts/build_chains.py --entity-path ... --funding-path ... \
+  --exposure-path ... --interface-path ... --output-path ...
 ```
 
 Every builder accepts `--entity-path`, `--cache-dir` (or the per-family source
-paths), `--output-path`, and `--force-output` overrides. `build_chains_v03.py`
+paths), `--output-path`, and `--force-output` overrides. `build_chains.py`
 takes `--entity-path --funding-path --exposure-path --interface-path
 --output-path`.
 
@@ -73,10 +74,10 @@ they consume caches already produced by the v0.3 collectors.
 
 ```bash
 python3 -m py_compile \
-  scripts/build_chains_v03.py \
-  scripts/build_funding_events_v03.py \
-  scripts/build_exposure_events_v03.py \
-  scripts/build_interface_events_v03.py \
+  scripts/build_chains.py \
+  scripts/build_funding_events.py \
+  scripts/build_exposure_events.py \
+  scripts/build_interface_events.py \
   scripts/schema_contract_loader.py || exit 1
 ```
 

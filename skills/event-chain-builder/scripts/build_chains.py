@@ -1,4 +1,4 @@
-"""Materialize chip event chains v0.3 from the three event parquets.
+"""Materialize event chains from the three event Parquets.
 
 One chain row represents one unique funding-level outcome. Funding participant
 rows are grouped into a single chain end. Only dated exposure/interface events
@@ -21,16 +21,6 @@ import pyarrow.parquet as pq
 sys.path.insert(0, str(Path(__file__).parent))
 from schema_contract_loader import load_schema_contract
 
-DATA_ROOT = Path(
-    os.environ.get(
-        "INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")
-    )
-)
-ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-FUNDING_PATH = DATA_ROOT / "funding_events_chip_v0.3.parquet"
-EXPOSURE_PATH = DATA_ROOT / "exposure_events_chip_v0.3_human_v0.1.parquet"
-INTERFACE_PATH = DATA_ROOT / "interface_events_chip_v0.3_human_v0.1.parquet"
-OUTPUT_PATH = DATA_ROOT / "chains_chip_v0.3_human_v0.1.parquet"
 SCHEMA_VERSION = "v0.3.0"
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas/chains_v0.3.schema.json"
@@ -90,12 +80,12 @@ def _middle_slice(df: pd.DataFrame | None, start_dt, end_dt) -> pd.DataFrame:
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(
-        description="Build chains chip v0.3 from funding/exposure/interface parquets")
-    ap.add_argument("--entity-path", default=str(ENTITY_PATH))
-    ap.add_argument("--funding-path", default=str(FUNDING_PATH))
-    ap.add_argument("--exposure-path", default=str(EXPOSURE_PATH))
-    ap.add_argument("--interface-path", default=str(INTERFACE_PATH))
-    ap.add_argument("--output-path", default=str(OUTPUT_PATH))
+        description="Build event chains from funding, exposure, and interface Parquets")
+    ap.add_argument("--entity-path", required=True)
+    ap.add_argument("--funding-path", required=True)
+    ap.add_argument("--exposure-path", required=True)
+    ap.add_argument("--interface-path", required=True)
+    ap.add_argument("--output-path", required=True)
     ap.add_argument("--force-output", action="store_true")
     return ap.parse_args()
 

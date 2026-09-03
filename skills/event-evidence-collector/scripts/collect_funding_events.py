@@ -1,9 +1,9 @@
-"""M2-Step-10.3 v0.3: collect chip funding events into per-company JSON cache.
+"""Collect funding events into a per-company JSON evidence cache.
 
-Split from build_funding_events_v03.py: this script has one job — for each
+This script has one job: for each
 requested company, run Tavily queries, extract funding rounds with the LLM, and
 write `<slug>.json` (a list of round dicts) under CACHE_DIR. It does NOT
-produce the parquet output; run build_funding_events_v03.py separately for that.
+produce the Parquet output; run the event builder separately for that.
 
 Splitting collect from build fixes the design flaw exposed by the 2026-08-12
 cache-loss incident: the previous single-script build rewrote the parquet in
@@ -15,7 +15,7 @@ a time.
 Usage:
     export TAVILY_API_KEY=...
     export OPENROUTER_API_KEY=...
-    python3 scripts/collect_funding_events_v03.py \\
+    python3 scripts/collect_funding_events.py \\
         --slugs cerebras-systems-inc,sambanova-systems,lightmatter,graphcore,syntiant \\
         [--force]
 """
@@ -44,9 +44,7 @@ EVENT_TYPE_GUIDE = "\n".join(
 )
 
 
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
-COMPANY_ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-CACHE_DIR = DATA_ROOT / "raw/funding_events_chip_v03"
+CACHE_DIR = Path(".")
 
 # Multi-query strategy: each query targets a distinct funding-round subset so
 # Tavily's top-8 spans the round-name space rather than being crowded by the
@@ -274,9 +272,9 @@ def main():
     ap.add_argument("--search-backend", type=str, default="tavily",
                     choices=["tavily", "serper"],
                     help="Search API backend: 'tavily' (default, requires TAVILY_API_KEY) or 'serper' (requires SERPER_API_KEY)")
-    ap.add_argument("--entity-path", type=str, default=str(COMPANY_ENTITY_PATH),
-                    help="Path to company entity parquet (default: companies_chip_subset_entity_v0.3.parquet)")
-    ap.add_argument("--cache-dir", type=str, default=str(CACHE_DIR),
+    ap.add_argument("--entity-path", type=str, required=True,
+                    help="Path to the company entity Parquet")
+    ap.add_argument("--cache-dir", type=str, required=True,
                     help="Directory for per-company JSON cache")
     args = ap.parse_args()
 

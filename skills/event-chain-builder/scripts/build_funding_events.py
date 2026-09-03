@@ -1,4 +1,4 @@
-"""Build chip funding_events v0.3 parquet from per-company JSON cache.
+"""Build a funding-event Parquet from per-company JSON caches.
 
 The builder is network-free. It accepts caches produced by the v0.2 collector
 as a documented compatibility migration; future collection uses the matching
@@ -19,17 +19,9 @@ import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _common import load_investor_id_map, make_slug, normalize_name
-from event_claim_resolution_v03 import normalize_partial_date, resolve_event_claims
+from event_claim_resolution import normalize_partial_date, resolve_event_claims
 from schema_contract_loader import load_schema_contract
 
-DATA_ROOT = Path(
-    os.environ.get(
-        "INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")
-    )
-)
-COMPANY_ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-CACHE_DIR = DATA_ROOT / "raw/funding_events_chip_v03"
-OUTPUT_PATH = DATA_ROOT / "funding_events_chip_v0.3.parquet"
 SCHEMA_VERSION = "v0.3.0"
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas/funding_events_v0.3.schema.json"
@@ -139,10 +131,10 @@ def _match_investors(rows: list[dict], inv_id_map: dict) -> None:
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(
-        description="Build funding_events chip v0.3 parquet from JSON cache")
-    ap.add_argument("--entity-path", default=str(COMPANY_ENTITY_PATH))
-    ap.add_argument("--cache-dir", default=str(CACHE_DIR))
-    ap.add_argument("--output-path", default=str(OUTPUT_PATH))
+        description="Build a schema-conformant funding-event Parquet from JSON caches")
+    ap.add_argument("--entity-path", required=True)
+    ap.add_argument("--cache-dir", required=True)
+    ap.add_argument("--output-path", required=True)
     ap.add_argument("--force-output", action="store_true")
     return ap.parse_args()
 

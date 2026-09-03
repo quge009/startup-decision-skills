@@ -9,7 +9,7 @@ Deterministic deduplication of raw company and investor entity names into
 canonical entities with stable, reproducible IDs, plus the slug-keyed
 `investor_id` lookup map used by downstream ingest passes.
 
-## Company entity pipeline (`build_company_entity_v02.py`)
+## Company entity pipeline (`build_company_entity.py`)
 
 Builds `companies_entity_v0.2.parquet` from per-source `edges_by_source`
 parquet files.
@@ -34,9 +34,9 @@ parquet files.
 ### Usage
 
 ```bash
-python3 scripts/build_company_entity_v02.py --edges-dir <dir> --out <path>
+python3 scripts/build_company_entity.py --edges-dir <dir> --out <path>
 # Optional, for a separately maintained research-specific mapping:
-python3 scripts/build_company_entity_v02.py --edges-dir <dir> --out <path> \
+python3 scripts/build_company_entity.py --edges-dir <dir> --out <path> \
   --manual-aliases <aliases.yaml>
 ```
 
@@ -87,7 +87,8 @@ scripts reuse the canonical `investor_id` instead of generating their own.
 
 | Env var | Default | Used by |
 |---|---|---|
-| `INVESTOR_BEHAVIOR_DATA_DIR` | `~/investor-behavior-analysis` | `merge_investors.py` `--out-dir`, `build_company_entity_v02.py` `--edges-dir` / `--out` defaults |
+All input and output paths are passed explicitly. `INVESTOR_ENTITY_PATH` is
+required only by helpers that resolve canonical investor IDs.
 | `INVESTOR_ENTITY_PATH` | `~/investor-behavior-analysis/investors_entity_v0.3.parquet` | `_common.py` `load_investor_id_map()` |
 
 The normalizers live in `_common.py`: `make_slug` (accent-transliterating,
@@ -105,10 +106,10 @@ suffix), `normalize_stage` / `normalize_stage_list` (10-value stage enum), and
 ## Self-test
 
 ```bash
-python3 -m py_compile scripts/_common.py scripts/merge_investors.py scripts/build_company_entity_v02.py
+python3 -m py_compile scripts/_common.py scripts/merge_investors.py scripts/build_company_entity.py
 ```
 
 All three modules must compile clean. Then smoke-test CLI parsing:
 `python3 scripts/merge_investors.py --help` and
-`python3 scripts/build_company_entity_v02.py --help` should both print usable
+`python3 scripts/build_company_entity.py --help` should both print usable
 flag documentation and exit 0.

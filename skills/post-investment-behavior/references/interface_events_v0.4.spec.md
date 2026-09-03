@@ -7,7 +7,7 @@ Version v0.4.0 is strictly additive to the physical v0.3 source schema: it appen
 | # | Column | Arrow type | Nullable | Contract |
 |---:|---|---|:---:|---|
 | 1 | `event_id` | `large_string` | No | PK; stable Interface event identifier |
-| 2 | `company_id` | `large_string` | No | FK to chip company entity v0.3 |
+| 2 | `company_id` | `large_string` | No | FK to the supplied company entity table |
 | 3 | `investor_id` | `large_string` | Yes | FK to investor entity v0.3 when resolved as an investor |
 | 4 | `raw_investor_name` | `large_string` | Yes | Counterparty text retained from extraction |
 | 5 | `event_date` | `large_string` | Yes | ISO or partial event date |

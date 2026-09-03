@@ -1,4 +1,4 @@
-"""Shared normalization and claim-resolution rules for Step-10 v0.3 builders.
+"""Shared normalization and claim-resolution rules for event builders.
 
 An event ID is the logical-event identity contract. Every event ID produces one
 canonical event row. All source claims remain in ``metadata_json.claims``; the

@@ -25,18 +25,14 @@ from typing import Any, Iterable
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-import analyze_chip_patterns_v01 as engine
+import analyze_patterns as engine
 
 RESEARCH_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")))
-DEFAULT_CHAIN_PATH = DATA_ROOT / "chains_chip_v0.3_clean_human_v0.2_identity_patch_v1.parquet"
-DEFAULT_EXPOSURE_PATH = DATA_ROOT / "exposure_events_chip_v0.3_clean_human_v0.2.parquet"
-DEFAULT_INTERFACE_PATH = DATA_ROOT / "interface_events_chip_v0.4_clean_human_v0.2_identity_patch_v1.parquet"
 DEFAULT_CHAIN_SCHEMA = RESEARCH_ROOT / "schemas/chains_v0.3.schema.json"
 DEFAULT_EXPOSURE_SCHEMA = RESEARCH_ROOT / "schemas/exposure_events_v0.3.schema.json"
 DEFAULT_INTERFACE_SCHEMA = RESEARCH_ROOT / "schemas/interface_events_v0.4.schema.json"
 
-GRAMMAR_VERSION = "chip_candidate_batch3_v1_explicit_typed_pairwise"
+GRAMMAR_VERSION = "pattern_candidates_extended_explicit_typed_pairwise"
 COMPLETENESS_STATUS = "COMPLETE_EXPLICIT_LEGAL_PAIRWISE_GRAMMAR"
 ACTION_ELIGIBLE = "ACTION_ELIGIBLE"
 DESCRIPTIVE_ASSOCIATION = "DESCRIPTIVE_ASSOCIATION"
@@ -658,7 +654,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         "config_schema_version": "1.0", "pattern_set_id": GRAMMAR_VERSION,
         "primary_order": [item["id"] for item in pairs],
         "patterns": [{
-            "id": item["id"], "name": f"Batch 3 {item['event_dimension']} × {item['structural_dimension']}",
+            "id": item["id"], "name": f"{item['event_dimension']} × {item['structural_dimension']}",
             "description": "Explicit label-blind typed-event × structural candidate.",
             "evaluation_status": "EVALUABLE", "not_evaluable_reason": None,
             "track": item["track"], "rule": item["rule"],
@@ -686,7 +682,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         **sequence_stats,
     }
     manifest = {
-        "generation_version": "batch3_v1", "phase": "LABEL_BLIND_GENERATION_FREEZE",
+        "generation_version": "extended_v1", "phase": "LABEL_BLIND_GENERATION_FREEZE",
         "runtime": {"python": platform.python_version(), "pyarrow": pa.__version__},
         "inputs": inputs,
         "schema_inputs": {name: {"path": str(path), "sha256": engine.sha256_file(path),
@@ -719,11 +715,11 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
     temp = Path(tempfile.mkdtemp(prefix=output.name + ".tmp-", dir=output.parent))
     try:
         payloads = {
-            "event_anchor_catalog_batch3_v1.json": anchor_payload,
-            "structural_atom_catalog_batch3_v1.json": structural_payload,
-            "candidate_pairs_batch3_v1.json": pair_payload,
-            "candidate_representatives_batch3_v1.json": representative_payload,
-            "chip_candidates_batch3_frozen_v1.json": frozen,
+            "event_anchor_catalog.json": anchor_payload,
+            "structural_atom_catalog.json": structural_payload,
+            "candidate_pairs.json": pair_payload,
+            "candidate_representatives.json": representative_payload,
+            "pattern_candidates_extended_frozen.json": frozen,
         }
         for name, payload in payloads.items():
             (temp / name).write_text(canonical_json(payload) + "\n")
@@ -733,7 +729,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         manifest["resource_observed"]["semantic_artifact_bytes"] = total_bytes
         manifest["outputs"] = {name: {"sha256": engine.sha256_file(temp / name),
                                              "bytes": (temp / name).stat().st_size} for name in sorted(payloads)}
-        (temp / "generation_manifest_batch3_v1.json").write_text(canonical_json(manifest) + "\n")
+        (temp / "generation_manifest.json").write_text(canonical_json(manifest) + "\n")
         os.replace(temp, output)
     except Exception:
         shutil.rmtree(temp, ignore_errors=True)
@@ -743,9 +739,9 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
-    result.add_argument("--chain-path", default=str(DEFAULT_CHAIN_PATH))
-    result.add_argument("--exposure-path", default=str(DEFAULT_EXPOSURE_PATH))
-    result.add_argument("--interface-path", default=str(DEFAULT_INTERFACE_PATH))
+    result.add_argument("--chain-path", required=True)
+    result.add_argument("--exposure-path", required=True)
+    result.add_argument("--interface-path", required=True)
     result.add_argument("--chain-schema", default=str(DEFAULT_CHAIN_SCHEMA))
     result.add_argument("--exposure-schema", default=str(DEFAULT_EXPOSURE_SCHEMA))
     result.add_argument("--interface-schema", default=str(DEFAULT_INTERFACE_SCHEMA))

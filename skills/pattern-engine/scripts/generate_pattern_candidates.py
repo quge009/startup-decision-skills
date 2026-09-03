@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze a label-blind, bounded CHIP Chain-Pattern candidate lattice.
+"""Freeze a label-blind, bounded event-chain Pattern candidate lattice.
 
 Only explicitly projected, unlabeled Chain/event columns and schema contracts are
 read.  The output is a compact finite grammar: supported atoms are explicit and
@@ -26,13 +26,9 @@ from typing import Any, Iterable
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-import analyze_chip_patterns_v01 as engine
+import analyze_patterns as engine
 
 RESEARCH_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = Path(os.environ.get("INVESTOR_BEHAVIOR_DATA_DIR", "~/investor-behavior-analysis")).expanduser()
-DEFAULT_CHAIN_PATH = DATA_ROOT / "chains_chip_v0.3_clean_human_v0.2.parquet"
-DEFAULT_EXPOSURE_PATH = DATA_ROOT / "exposure_events_chip_v0.3_clean_human_v0.2.parquet"
-DEFAULT_INTERFACE_PATH = DATA_ROOT / "interface_events_chip_v0.3_clean_human_v0.2.parquet"
 DEFAULT_CHAIN_SCHEMA = RESEARCH_ROOT / "schemas/chains_v0.3.schema.json"
 DEFAULT_EXPOSURE_SCHEMA = RESEARCH_ROOT / "schemas/exposure_events_v0.3.schema.json"
 DEFAULT_INTERFACE_SCHEMA = RESEARCH_ROOT / "schemas/interface_events_v0.3.schema.json"
@@ -338,12 +334,12 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
         "not_claimed": "No claim is made for all mathematical formulas, excluded dimensions, atoms below the support floor, or formulas beyond the declared bounds.",
     }
     lattice = {
-        "lattice_schema_version": "1.0", "lattice_id": "chip_label_blind_finite_grammar_v0.1",
+        "lattice_schema_version": "1.0", "lattice_id": "label_blind_finite_grammar",
         "grammar": grammar, "domains": {key: list(value) for key, value in domains.items()},
         "atoms": atoms, "completeness": completeness,
     }
     frozen = {
-        "config_schema_version": "1.0", "pattern_set_id": "chip_label_blind_candidates_v0.1",
+        "config_schema_version": "1.0", "pattern_set_id": "label_blind_candidates",
         "primary_order": [item["id"] for item in selected],
         "patterns": [{
             "id": item["id"], "name": f"Finite-grammar candidate {item['id']}",
@@ -420,7 +416,7 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
     temp = Path(tempfile.mkdtemp(prefix=output.name + ".tmp-", dir=output.parent))
     try:
         lattice_path = temp / "candidate_lattice_v0.1.json"
-        frozen_path = temp / "chip_candidates_frozen_v0.1.json"
+        frozen_path = temp / "pattern_candidates_frozen.json"
         lattice_path.write_text(json.dumps(lattice, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
         frozen_path.write_text(json.dumps(frozen, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
         manifest["outputs"] = {
@@ -437,9 +433,9 @@ def freeze(args: argparse.Namespace) -> dict[str, Any]:
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
-    result.add_argument("--chain-path", default=str(DEFAULT_CHAIN_PATH))
-    result.add_argument("--exposure-path", default=str(DEFAULT_EXPOSURE_PATH))
-    result.add_argument("--interface-path", default=str(DEFAULT_INTERFACE_PATH))
+    result.add_argument("--chain-path", required=True)
+    result.add_argument("--exposure-path", required=True)
+    result.add_argument("--interface-path", required=True)
     result.add_argument("--chain-schema", default=str(DEFAULT_CHAIN_SCHEMA))
     result.add_argument("--exposure-schema", default=str(DEFAULT_EXPOSURE_SCHEMA))
     result.add_argument("--interface-schema", default=str(DEFAULT_INTERFACE_SCHEMA))

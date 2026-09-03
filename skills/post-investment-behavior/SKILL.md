@@ -12,7 +12,7 @@ method is independent of event chains and does not use company outcome labels.
 
 1. Supply investor entities, company entities, funding events, and
    identity-resolved Interface events using explicit CLI paths.
-2. Run `scripts/analyze_investor_post_investment_behavior_v01.py --output-dir ...`.
+2. Run `scripts/analyze_post_investment_behavior.py --output-dir ...`.
 3. Count an event as confirmed post-investment only when dated investment
    evidence precedes it; keep overlapping, unknown, absent, and later-only
    evidence states separate.

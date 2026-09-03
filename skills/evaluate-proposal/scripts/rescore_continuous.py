@@ -1,17 +1,13 @@
-"""Continuous-score rescoring helper for M/U checks (v1.5b staging).
+"""Continuous-score rescoring helper for market and uniqueness checks.
 
-Pure function library. Does NOT change aggregate.py production verdict path
-— aggregate.py stays on v1.5a discrete verdicts (PASS/WARN/FAIL → {1.0,
+Pure function library. It does not change the discrete aggregation path
+(PASS/WARN/FAIL → {1.0,
 0.5, 0.0} → weighted 0.5·M + 0.5·U → threshold 0.50).
 
-This module lets research (or a future v1.6 production run) map the raw
+This module maps the raw
 quantitative fields already emitted by m_check.json / u_check.json into
 continuous [0, 1] scores without discretizing through the verdict layer.
-Motivation (per pipeline_benchmark iter 4 + iter 6 diagnostic):
-  - iter 4 FP: 14/14 all M=WARN + U=WARN + weighted_score=0.5 (boundary
-    artifact on PASS threshold 0.50).
-  - iter 6 FP: 22/22 same structure.
-  - Discrete verdict quantizes weighted_score into {0.0, 0.25, 0.5, 0.75,
+Discrete verdicts quantize weighted_score into {0.0, 0.25, 0.5, 0.75,
     1.0}; PASS threshold 0.50 sits atop the largest cluster, so precision
     is capped structurally.
 

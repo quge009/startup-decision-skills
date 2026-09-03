@@ -657,8 +657,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="Merge 3 per-source parquets → canonical entity + provenance + coverage report"
     )
-    ap.add_argument("--out-dir", default=str(DEFAULT_ROOT),
-                    help=f"Root output dir (default: {DEFAULT_ROOT})")
+    ap.add_argument("--out-dir", required=True,
+                    help="Output directory for entity, provenance, and report artifacts")
     ap.add_argument("--universe", type=Path,
                     help="Optional YAML with row-count and expected-name sanity checks")
     args = ap.parse_args()

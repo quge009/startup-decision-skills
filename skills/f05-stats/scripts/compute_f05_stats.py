@@ -1,4 +1,4 @@
-"""F0.5 + 4-cell verdict↔truth bridge stats.
+"""Compute F0.5 and four-cell verdict-to-reference statistics.
 
 Reads A5/A6 step 1 results CSV and recomputes evaluation cells fresh from
 (framework class, verdict, outcome_label) per Report §4.
@@ -33,7 +33,7 @@ the candidate came from v1.4 OOS short-circuit (no-verdict) path or from a
 verdict path.
 
 Usage:
-  python3 cb_step_l_f05_stats.py [/path/to/results.csv]
+  python3 compute_f05_stats.py [/path/to/results.csv]
 """
 
 import argparse
@@ -44,11 +44,6 @@ import sys
 from pathlib import Path
 
 csv.field_size_limit(sys.maxsize)
-
-# Default results directory; override with the CLI `path` argument or env var.
-DATA = Path(__import__("os").environ.get("F05_DATA_DIR", str(Path.home() / "data")))
-TRAIN_RESULTS = DATA / "a5_train_results.csv"
-VAL_RESULTS = DATA / "a6_val_results.csv"
 
 SUCCESS_TRUTH = {"POSITIVE_IPO", "POSITIVE_LATE_STAGE_FUNDED",
                  "POSITIVE_ACQUIRED", "EQUIVOCAL_DELISTED"}
@@ -297,26 +292,10 @@ def load_csv(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", nargs="?", help="results CSV path; if omitted, reads train + val and reports separately")
-    parser.add_argument("--split", choices=["train", "val", "all"], default="all",
-                        help="which split to report (default all = train + val + combined)")
+    parser.add_argument("path", help="results CSV path")
     args = parser.parse_args()
-
-    if args.path:
-        rows = load_csv(Path(args.path))
-        compute_stats(rows, args.path)
-        return
-
-    # Default: read train + val from canonical paths
-    train_rows = load_csv(TRAIN_RESULTS)
-    val_rows = load_csv(VAL_RESULTS)
-
-    if args.split in {"train", "all"}:
-        compute_stats(train_rows, "A5 train sample (80 candidates)")
-    if args.split in {"val", "all"}:
-        compute_stats(val_rows, "A6 val sample (40 candidates)")
-    if args.split == "all":
-        compute_stats(train_rows + val_rows, "Combined train+val (120 candidates)")
+    rows = load_csv(Path(args.path))
+    compute_stats(rows, args.path)
 
 
 if __name__ == "__main__":

@@ -63,7 +63,7 @@ Label definitions:
                               indicates poor Crunchbase data quality.
 
 Usage:
-    from cb_outcome_label import outcome_label_mapping
+    from outcome_label import outcome_label_mapping
     label = outcome_label_mapping(row_dict)
 """
 
@@ -286,18 +286,10 @@ def verdict_outcome_evaluation_class(verdict, outcome_label):
     """Map a (framework verdict, Crunchbase outcome_label) pair into one
     of the EVALUATION_CELL_TYPES cells.
 
-    **Definition aligned with `_REPORT.md §2b` and iter aggregators (2026-07-13)**:
+    **Evaluation definition:**
     binary precision / recall / F0.5 use predicted-positive = `PASS` and
     predicted-negative = `WARN` ∪ `FAIL` ∪ `OUT_OF_SCOPE` ∪ no-verdict. Truth-side
     `INDETERMINATE` / `UNKNOWN` are filtered.
-
-    Prior (pre-2026-07-13) behavior filtered `WARN` and `OUT_OF_SCOPE` out of
-    the confusion matrix as `FILTER_pred_warn` / `FILTER_pred_out_of_scope`.
-    That behavior was inconsistent with the report definition and with all
-    iter aggregators (`cb_step_ai_b1_u2_rollback.py`, `cb_step_ak_section17_h01.py`,
-    etc.) which have always used the report definition. Historic F0.5 numbers
-    (iter 3+ 0.659 / 0.708 / 0.7083 / 0.6386 / 0.6780) were produced under the
-    report definition — unaffected by this fix.
 
     Truth-side commitment threshold (Decision 2): EQUIVOCAL_DELISTED is
     counted as SUCCESS — most delistings are acquisition / take-private

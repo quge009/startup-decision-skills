@@ -1,4 +1,4 @@
-"""A1.7 — Filter v2 implementation.
+"""Filter a source company table into a bounded research cohort.
 
 Streams full opensporks/Crunchbase 2.87M rows and emits cohort_v2.csv
 applying ONLY Tier 1 (AI category match — allow-list OR reverse-keyword
@@ -6,7 +6,7 @@ recall) and Tier 3 (founded 2010-2026). Per charter v5 §1 Task A and
 §0.7, the v1 Tier 2 (funding stage) and Tier 4 (description length) and
 Tier 5 (outcome != AMBIGUOUS) filters are DROPPED — outcome
 classification is moved to a separate label-mapping step
-(cb_outcome_label.outcome_label_mapping) that assigns every row one of
+(`outcome_label.outcome_label_mapping`) that assigns every row one of
 8 outcome labels including INDETERMINATE / UNKNOWN, used as ground
 truth in A5/A6 calibration.
 
@@ -20,29 +20,21 @@ Estimated output: ~57k rows (per A1.0 distribution probe — 45,484
 rows match Tier 1 AI category allow-list + ~25 reverse-recall rows;
 Tier 3 founded 2010-2026 keeps the bulk).
 
-Output: cohort_v2.csv under the filtered dir (default
-  `<home>/_data/pipeline_benchmark/crunchbase_filtered/`; override via
-  CB_DATA_HOME for the base, or CB_RAW_DIR / CB_FILTERED_DIR per-dir).
+Input directory, filename pattern, output path, and founding-year bounds are
+explicit command-line arguments.
 """
 
+import argparse
 import csv
-import os
 import re
 import sys
 from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cb_outcome_label import outcome_label_mapping, VALID_LABELS
+from outcome_label import outcome_label_mapping, VALID_LABELS
 
 csv.field_size_limit(sys.maxsize)
-
-def _default_data_home():
-    return Path(os.environ.get("CB_DATA_HOME", str(Path.home()))) / "_data" / "pipeline_benchmark"
-
-DATA_DIR = Path(os.environ.get("CB_RAW_DIR", str(_default_data_home() / "crunchbase_hf_raw")))
-OUT_DIR = Path(os.environ.get("CB_FILTERED_DIR", str(_default_data_home() / "crunchbase_filtered")))
-OUT_FILE = OUT_DIR / "cohort_v2.csv"
 
 # Tier 1 — AI category allow-list, locked in A1.5 final spec
 # (charter v5 §0.4 + post-A1.4 audit). Robotics / Predictive Analytics /
@@ -125,16 +117,27 @@ def passes_tier_1(row):
     return None
 
 
-def passes_tier_3(row):
+def passes_tier_3(row, year_min=FOUNDED_YEAR_MIN, year_max=FOUNDED_YEAR_MAX):
     yr = parse_year(row.get("founded_on") or "")
     if yr is None:
         return False
-    return FOUNDED_YEAR_MIN <= yr <= FOUNDED_YEAR_MAX
+    return year_min <= yr <= year_max
 
 
 def main():
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    chunks = sorted(DATA_DIR.glob("crunchbase_*.csv"))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-dir", type=Path, required=True)
+    parser.add_argument("--glob", default="*.csv", help="Input filename pattern")
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--founded-year-min", type=int, default=FOUNDED_YEAR_MIN)
+    parser.add_argument("--founded-year-max", type=int, default=FOUNDED_YEAR_MAX)
+    args = parser.parse_args()
+    if args.founded_year_min > args.founded_year_max:
+        parser.error("--founded-year-min cannot exceed --founded-year-max")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    chunks = sorted(args.input_dir.glob(args.glob))
+    if not chunks:
+        raise FileNotFoundError(f"no inputs matching {args.glob!r} in {args.input_dir}")
     print(f"scanning {len(chunks)} chunks", file=sys.stderr)
 
     funnel = Counter()
@@ -142,7 +145,7 @@ def main():
     tier1_path_counts = Counter()
     cohort_rows = 0
 
-    with OUT_FILE.open("w", newline="") as fout:
+    with args.output.open("w", newline="") as fout:
         writer = csv.DictWriter(fout, fieldnames=OUTPUT_COLS, extrasaction="ignore")
         writer.writeheader()
 
@@ -157,7 +160,7 @@ def main():
                         continue
                     funnel["after_tier_1"] += 1
 
-                    if not passes_tier_3(row):
+                    if not passes_tier_3(row, args.founded_year_min, args.founded_year_max):
                         continue
                     funnel["after_tier_3"] += 1
 
@@ -175,13 +178,13 @@ def main():
                   file=sys.stderr)
 
     print()
-    print("=== Filter v2 funnel ===")
+    print("=== Cohort filter funnel ===")
     print(f"  total rows scanned                  : {funnel['total']:,}")
     print(f"  Tier 1 (AI category OR keyword)     : {funnel['after_tier_1']:,}")
-    print(f"  + Tier 3 (founded 2010-2026)        : {funnel['after_tier_3']:,}")
+    print(f"  + founding window ({args.founded_year_min}-{args.founded_year_max}) : {funnel['after_tier_3']:,}")
     print()
     print(f"Cohort emitted: {cohort_rows:,} rows")
-    print(f"Output: {OUT_FILE}")
+    print(f"Output: {args.output}")
     print()
     print("Tier 1 match path:")
     for path, n in tier1_path_counts.most_common():

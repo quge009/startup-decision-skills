@@ -1,4 +1,4 @@
-"""Build chip exposure_events v0.3 parquet from per-company JSON cache."""
+"""Build an interface-event Parquet from per-company JSON caches."""
 
 from __future__ import annotations
 
@@ -14,37 +14,44 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).parent))
-from event_claim_resolution_v03 import normalize_partial_date, resolve_event_claims
+from _common import load_investor_id_map, normalize_name
+from event_claim_resolution import normalize_partial_date, resolve_event_claims
 from schema_contract_loader import load_schema_contract
 
-DATA_ROOT = Path(
-    os.environ.get(
-        "INVESTOR_BEHAVIOR_DATA_DIR", str(Path.home() / "investor-behavior-analysis")
-    )
-)
-COMPANY_ENTITY_PATH = DATA_ROOT / "companies_chip_subset_entity_v0.3.parquet"
-CACHE_DIR = DATA_ROOT / "raw/exposure_events_chip_v03"
-OUTPUT_PATH = DATA_ROOT / "exposure_events_chip_v0.3.parquet"
 SCHEMA_VERSION = "v0.3.0"
 
-SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas/exposure_events_v0.3.schema.json"
-EXPOSURE_SCHEMA, EVENT_TYPES = load_schema_contract(SCHEMA_PATH)
+SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas/interface_events_v0.3.schema.json"
+INTERFACE_SCHEMA, EVENT_TYPES = load_schema_contract(SCHEMA_PATH)
 
 
-def _event_id(company_id: str, event_date: str | None, title: str) -> str:
-    key = f"{company_id}|{event_date or ''}|{title.strip().lower()}"
-    return "exp:" + hashlib.sha1(key.encode()).hexdigest()[:20]
+def _event_id(
+    company_id: str,
+    event_date: str | None,
+    title: str,
+    raw_investor_name: str | None,
+) -> str:
+    key = (
+        f"{company_id}|{event_date or ''}|{title.strip().lower()}|"
+        f"{normalize_name(raw_investor_name or '')}"
+    )
+    return "int:" + hashlib.sha1(key.encode()).hexdigest()[:20]
 
 
-def _to_row(event: dict, company_id: str, scraped_at: str) -> dict:
+def _to_row(
+    event: dict, company_id: str, scraped_at: str, investor_map: dict,
+) -> dict:
     event_type = event.get("event_type") or "other"
     if event_type not in EVENT_TYPES:
         event_type = "other"
     title = (event.get("title") or "").strip()
     event_date = normalize_partial_date(event.get("event_date"))
+    raw_investor = (event.get("raw_investor_name") or "").strip() or None
+    investor_id = investor_map.get(normalize_name(raw_investor)) if raw_investor else None
     return {
-        "event_id": _event_id(company_id, event_date, title),
+        "event_id": _event_id(company_id, event_date, title, raw_investor),
         "company_id": company_id,
+        "investor_id": investor_id,
+        "raw_investor_name": raw_investor,
         "event_date": event_date,
         "event_type": event_type,
         "event_subtype": event.get("event_subtype"),
@@ -61,10 +68,10 @@ def _to_row(event: dict, company_id: str, scraped_at: str) -> dict:
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(
-        description="Build exposure_events chip v0.3 parquet from JSON cache")
-    ap.add_argument("--entity-path", default=str(COMPANY_ENTITY_PATH))
-    ap.add_argument("--cache-dir", default=str(CACHE_DIR))
-    ap.add_argument("--output-path", default=str(OUTPUT_PATH))
+        description="Build a schema-conformant interface-event Parquet from JSON caches")
+    ap.add_argument("--entity-path", required=True)
+    ap.add_argument("--cache-dir", required=True)
+    ap.add_argument("--output-path", required=True)
     ap.add_argument("--force-output", action="store_true")
     return ap.parse_args()
 
@@ -85,6 +92,7 @@ def main() -> None:
 
     entity = pq.read_table(entity_path, columns=["slug", "company_id"]).to_pylist()
     slug_to_id = {row["slug"]: row["company_id"] for row in entity}
+    investor_map = load_investor_id_map()
     scraped_at = datetime.datetime.now(datetime.UTC).isoformat(
         timespec="seconds").replace("+00:00", "Z")
     rows = []
@@ -105,12 +113,12 @@ def main() -> None:
             invalid_cache += 1
             continue
         rows.extend(
-            _to_row(event, company_id, scraped_at)
+            _to_row(event, company_id, scraped_at, investor_map)
             for event in events if isinstance(event, dict)
         )
 
-    rows, resolution = resolve_event_claims(rows, "exposure")
-    table = pa.Table.from_pylist(rows, schema=EXPOSURE_SCHEMA)
+    rows, resolution = resolve_event_claims(rows, "interface")
+    table = pa.Table.from_pylist(rows, schema=INTERFACE_SCHEMA)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(table, output_path)
     print(f"read {len(cache_files)} cache files from {cache_dir}")

@@ -31,16 +31,6 @@ import pyarrow.parquet as pq
 sys.path.insert(0, str(Path(__file__).parent))
 from _common import make_slug
 
-# Defaults (overridable via CLI flags --edges-dir / --out)
-DEFAULT_EDGES_DIR = Path(os.environ.get(
-    "INVESTOR_BEHAVIOR_DATA_DIR",
-    str(Path.home() / "investor-behavior-analysis"),
-)) / "extracted" / "edges_by_source"
-DEFAULT_OUTPUT_PATH = Path(os.environ.get(
-    "INVESTOR_BEHAVIOR_DATA_DIR",
-    str(Path.home() / "investor-behavior-analysis"),
-)) / "companies_entity_v0.2.parquet"
-
 # Legal suffix stripping for company dedup
 LEGAL_SUFFIXES = frozenset({
     "inc", "corp", "ltd", "plc", "llc", "lp", "sa", "ag", "nv", "bv",
@@ -164,10 +154,10 @@ def main():
     ap = argparse.ArgumentParser(
         description="Build company entity table from per-source edges parquets."
     )
-    ap.add_argument("--edges-dir", default=str(DEFAULT_EDGES_DIR),
-                    help=f"Dir of *_v0.2.parquet edges_by_source files (default: {DEFAULT_EDGES_DIR})")
-    ap.add_argument("--out", default=str(DEFAULT_OUTPUT_PATH),
-                    help=f"Output companies_entity parquet path (default: {DEFAULT_OUTPUT_PATH})")
+    ap.add_argument("--edges-dir", required=True,
+                    help="Directory of per-source edge Parquets")
+    ap.add_argument("--out", required=True,
+                    help="Output company entity Parquet")
     ap.add_argument("--manual-aliases", type=Path,
                     help="Optional YAML file of canonical names and aliases; no aliases are applied by default")
     args = ap.parse_args()
