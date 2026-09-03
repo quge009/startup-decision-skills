@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: sixteen modular agent skills">
+  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: fourteen modular agent skills">
 </p>
 
 <h1 align="center">Startup Decision Skills</h1>
@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E" alt="MIT license"></a>
 </p>
 
-Sixteen composable skills turn startup proposals and public-source records
+Fourteen composable skills turn startup proposals and public-source records
 into structured candidate cards, time-bounded evidence checks, canonical
 entities, event chains, and auditable retrospective patterns. The collection
 covers both sides of a startup decision:
@@ -38,7 +38,6 @@ cp -R startup-decision-skills/skills/. ~/.claude/skills/
 # Or install only the proposal-evaluation workflow:
 cp -r startup-decision-skills/skills/evaluate-proposal ~/.claude/skills/
 cp -r startup-decision-skills/skills/candidate-classifier ~/.claude/skills/
-cp -r startup-decision-skills/skills/tavily-query-builder ~/.claude/skills/
 cp -r startup-decision-skills/skills/check-interpreter ~/.claude/skills/
 ```
 
@@ -55,8 +54,7 @@ runtime.
 |---|---|
 | [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
 | [`candidate-classifier`](skills/candidate-classifier/) | Produces the five-dimension candidate card, archetype, and founding year |
-| [`tavily-query-builder`](skills/tavily-query-builder/) | Builds uniform M-check and U-check research queries |
-| [`check-interpreter`](skills/check-interpreter/) | Retrieves time-bounded evidence and interprets market and moat checks |
+| [`check-interpreter`](skills/check-interpreter/) | Builds queries, retrieves time-bounded evidence, and interprets market and moat checks |
 | [`outcome-labeling`](skills/outcome-labeling/) | Maps company records to the fixed eight-label outcome ontology |
 | [`leakage-scan`](skills/leakage-scan/) | Detects post-founding outcome information in candidate cards |
 | [`cohort-sampling`](skills/cohort-sampling/) | Builds benchmark cohorts and deterministic train/validation samples |
@@ -69,8 +67,7 @@ runtime.
 | [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Authors selectors, extracts portfolio pages, audits edges, and merges source tables |
 | [`entity-dedup`](skills/entity-dedup/) | Resolves company and investor names into stable canonical identities |
 | [`event-evidence-collector`](skills/event-evidence-collector/) | Collects source-grounded funding, exposure, and interface event claims |
-| [`event-claim-resolution`](skills/event-claim-resolution/) | Merges multi-source claims into auditable canonical events |
-| [`event-chain-builder`](skills/event-chain-builder/) | Materializes funding, exposure, and interface events into outcome chains |
+| [`event-chain-builder`](skills/event-chain-builder/) | Resolves claims and materializes funding, exposure, and interface events into outcome chains |
 | [`interface-identity-resolution`](skills/interface-identity-resolution/) | Resolves reviewed Interface counterparties into investor or associated identities |
 | [`pattern-engine`](skills/pattern-engine/) | Freezes, audits, evaluates, and registers label-blind event-chain patterns |
 | [`post-investment-behavior`](skills/post-investment-behavior/) | Derives descriptive investor behavior from temporally ordered investment evidence |

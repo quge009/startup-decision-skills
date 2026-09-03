@@ -17,7 +17,7 @@ using a frozen, documented calibration threshold. Score formula,
 M/U-check, archetype handling, retrieval window — all unchanged.
 
 This skill internally invokes three sibling skills (`candidate-classifier`,
-`tavily-query-builder`, `check-interpreter`) and finishes with
+`check-interpreter`) and finishes with
 deterministic aggregation (`aggregate.py`) + LLM reasoning composition.
 
 ## v1.5 architectural changes (vs v1.4)
@@ -90,9 +90,9 @@ proceeds regardless**. Out-of-scope candidates still go through M-check +
 U-check + aggregate + reasoning. Archetype is preserved in
 `archetype.json` purely as aux output for diagnostics.
 
-### Step 2 — Build tavily queries (invoke tavily-query-builder skill)
+### Step 2 — Build tavily queries (use check-interpreter query builder)
 
-Invoke the `tavily-query-builder` skill with `<working_dir>` to produce
+Use `check-interpreter/scripts/build_queries.py` with `<working_dir>` to produce
 `placeholders.json` + `queries.json`. Queries are uniform across all
 archetypes (per v1.5 #3 archetype-agnostic). Verify there are no
 unresolved placeholders (warn if any).

@@ -39,6 +39,12 @@ existing output unless `--force-output` is passed, and fail loud on missing
 inputs, unknown company_ids, unexpected schema versions, or unsupported outcome
 types.
 
+`event_claim_resolution.py` groups rows by `event_id`, selects the uniquely
+highest-confidence claim (earliest input order breaks ties), preserves every
+raw claim in `metadata_json.claims`, and reports semantic conflicts. The three
+event builders apply it before materialization; it may also be imported for
+standalone claim normalization.
+
 ## Usage
 
 ```bash
