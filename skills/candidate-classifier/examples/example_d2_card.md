@@ -2,6 +2,7 @@
 
 **Slug**: d2-agent-orchestration-marketplace
 **Public/private**: private (proposal stage)
+**Founding year**: 2025
 **Card last updated**: 2026-06-04
 **Card author**: auto-generated (via candidate-classifier skill)
 

@@ -37,7 +37,7 @@ def make_slug(name: str, max_len: int = 50) -> str:
             for c in nfkd:
                 if not unicodedata.combining(c):
                     parts.append(c)
-    
+
     text = "".join(parts).lower()
     # Replace non-word chars with hyphen
     slug = re.sub(r"[^\w]", "-", text, flags=re.UNICODE)
@@ -357,23 +357,23 @@ _INVESTOR_ID_CACHE = None
 
 def load_investor_id_map() -> dict[str, str]:
     """Load entity table and return {make_slug(name): investor_id} mapping.
-    
+
     All ingest scripts should use this to look up the canonical investor_id
     rather than generating their own. Cached after first call.
     """
     global _INVESTOR_ID_CACHE
     if _INVESTOR_ID_CACHE is not None:
         return _INVESTOR_ID_CACHE
-    
+
     import pyarrow.parquet as pq
     from pathlib import Path
-    
+
     if not _ENTITY_PATH:
         raise RuntimeError("set INVESTOR_ENTITY_PATH to the canonical investor Parquet")
     p = Path(_ENTITY_PATH)
     if not p.exists():
         raise FileNotFoundError(f"investor entity table not found: {p}")
-    
+
     df = pq.read_table(p, columns=["investor_id", "name"]).to_pandas()
     _INVESTOR_ID_CACHE = {make_slug(row["name"]): row["investor_id"] for _, row in df.iterrows()}
     return _INVESTOR_ID_CACHE
