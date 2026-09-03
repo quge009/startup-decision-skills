@@ -7,7 +7,7 @@ so the skill's Claude can Read the stdout and use the values.
 
 Usage:
   python3 lookup_firm.py --slug sequoia-capital
-  python3 lookup_firm.py --slug founders-fund --config-path /work/project/configs/top20_vc_portfolio.yaml
+  python3 lookup_firm.py --slug founders-fund --config-path configs/top20_vc_portfolio.yaml
 
 Fail-loud (exit 1) if:
   - config yaml is unreadable
@@ -17,21 +17,22 @@ Fail-loud (exit 1) if:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 import yaml
 
 
-DEFAULT_CONFIG = "/work/project/configs/top20_vc_portfolio.yaml"
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--slug", required=True, help="Firm slug, e.g. sequoia-capital")
-    ap.add_argument("--config-path", default=DEFAULT_CONFIG,
-                    help=f"Path to top20_vc_portfolio.yaml (default: {DEFAULT_CONFIG})")
+    ap.add_argument("--config-path", default=os.environ.get("PORTFOLIO_CONFIG_PATH"),
+                    help="Path to firm-config YAML (or set PORTFOLIO_CONFIG_PATH)")
     args = ap.parse_args()
+
+    if not args.config_path:
+        ap.error("--config-path is required unless PORTFOLIO_CONFIG_PATH is set")
 
     cfg_path = Path(args.config_path)
     if not cfg_path.exists():

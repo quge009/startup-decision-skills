@@ -40,7 +40,7 @@ of defense that flags obvious mistakes before writing to output):
   - MAX_ROWS = 20000
 
 Usage:
-  python3 self_test_selector.py --yaml /tmp/sequoia.yaml --html /work/data/raw/portfolio_html/2026-07-29/sequoia-capital.html
+  python3 self_test_selector.py --yaml /tmp/sequoia.yaml --html data/portfolio_html/2026-07-29/sequoia-capital.html
   python3 self_test_selector.py --yaml <path> --html <path> --write-back
 """
 

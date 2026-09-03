@@ -7,8 +7,8 @@ card.
 ## Part 2 — Post-investment behavior (investor_behavior_analysis)
 
 All tables below live in a single HF dataset repo
-[`quge007/investor-behavior-dataset`](https://huggingface.co/datasets/quge007/investor-behavior-dataset)
-(private), exposed as four configs:
+[`quge007/investor-behavior-dataset`](https://huggingface.co/datasets/quge007/investor-behavior-dataset),
+exposed as four configs:
 
 | Config | Contents | Notes |
 |---|---|---|

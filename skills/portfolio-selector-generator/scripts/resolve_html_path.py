@@ -7,7 +7,7 @@ absolute path to stdout.
 
 Usage:
   python3 resolve_html_path.py --slug sequoia-capital
-  python3 resolve_html_path.py --slug founders-fund --html-dir /work/data/raw/portfolio_html
+  python3 resolve_html_path.py --slug founders-fund --html-dir data/portfolio_html
 
 Fail-loud (exit 1) if:
   - html-dir does not exist
@@ -16,21 +16,24 @@ Fail-loud (exit 1) if:
 """
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
 
 
-DEFAULT_HTML_DIR = "/work/data/raw/portfolio_html"
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--slug", required=True, help="Firm slug, e.g. sequoia-capital")
-    ap.add_argument("--html-dir", default=DEFAULT_HTML_DIR,
-                    help=f"Base HTML cache dir (default: {DEFAULT_HTML_DIR})")
+    ap.add_argument("--html-dir", default=os.environ.get("PORTFOLIO_HTML_DIR"),
+                    help="Base HTML cache directory (or set PORTFOLIO_HTML_DIR)")
     args = ap.parse_args()
+
+    if not args.html_dir:
+        ap.error("--html-dir is required unless PORTFOLIO_HTML_DIR is set")
 
     base = Path(args.html_dir)
     if not base.is_dir():

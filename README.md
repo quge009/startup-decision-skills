@@ -1,11 +1,10 @@
 # Startups Research Skills · startup-decision-skills
 
-Agent skills extracted from the **business-predictive-model** research work
-at Finalsystems — a full-lifecycle decision toolchain for tech founders:
+Agent skills extracted from the **business-predictive-model** research work---a
+full-lifecycle decision toolchain for tech founders:
 
-* **Part 1 — Pre-BP (business-model prediction)**: predict a startup
-  idea's viability before the pitch; engineer + externally-validate the
-  prediction pipeline.
+* **Part 1 — Pre-BP (business-model evaluation)**: assess a startup
+  idea's viability before the pitch and benchmark the evaluation pipeline.
 * **Part 2 — Post-BP (post-investment behavior)**: after the pitch, help
   founders find the right capital and avoid pitfalls by profiling investor
   pre/post-investment behavior.
@@ -34,7 +33,6 @@ folder into `.claude/skills/` (Claude Code) or import it per
 
 | Skill | Tier | What it does |
 |---|---|---|
-| [pattern-engine](skills/pattern-engine/) | 2 | Config-driven event-pattern recognition over entity/event data |
 | [web-screenshot-capture](skills/web-screenshot-capture/) | 2 | Full-page web screenshots (Playwright) + PNG→webp conversion |
 
 ### Part 2 — Post-investment behavior (investor analysis)
@@ -45,6 +43,7 @@ folder into `.claude/skills/` (Claude Code) or import it per
 | [event-claim-resolution](skills/event-claim-resolution/) | 1 | Merge multi-source event claims into canonical events |
 | [event-chain-builder](skills/event-chain-builder/) | 2 | Build multi-source event timelines + materialize outcome chains |
 | [entity-dedup](skills/entity-dedup/) | 1 | Dedupe company / investor entities into canonical IDs |
+| [pattern-engine](skills/pattern-engine/) | 2 | Config-driven retrospective event-pattern recognition over entity/event data |
 
 **Tier definitions** — `core`: existing production framework skills;
 `1`: pure-logic, previously productized script; `2`: needs small

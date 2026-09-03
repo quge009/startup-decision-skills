@@ -18,8 +18,9 @@ only see one firm's HTML at a time.
 
 ## Input
 
-The orchestrator passes ONE parameter via prompt: **the firm slug**. All
-other firm metadata + paths you need are derivable from the mounted volumes
+The orchestrator passes the **firm slug** and supplies project locations through
+`PORTFOLIO_CONFIG_PATH`, `PORTFOLIO_HTML_DIR`, and `PORTFOLIO_SCHEMA_PATH` (or
+equivalent command-line arguments). Firm metadata and paths are resolved
 via the helper scripts under this skill's `scripts/` directory (invoked
 through the Bash tool; do NOT re-implement in inline Python — the container
 has BeautifulSoup / lxml / PyYAML pre-installed and the scripts wrap them
@@ -27,20 +28,18 @@ deterministically):
 
 - `slug` — firm slug (e.g. `sequoia-capital`), passed via the prompt.
 - **Firm metadata** — obtain via
-  `python3 ~/.claude/skills/portfolio-selector-generator/scripts/lookup_firm.py --slug ${SLUG}`
+  `python3 ~/.claude/skills/portfolio-selector-generator/scripts/lookup_firm.py --slug ${SLUG} --config-path "${PORTFOLIO_CONFIG_PATH}"`
   which prints a JSON object with `investor_id`, `canonical_name`,
   `portfolio_url`, `tech_flag`. Fail-loud (exit 1) on unknown slug.
 - **HTML path** — obtain via
-  `python3 ~/.claude/skills/portfolio-selector-generator/scripts/resolve_html_path.py --slug ${SLUG}`
+  `python3 ~/.claude/skills/portfolio-selector-generator/scripts/resolve_html_path.py --slug ${SLUG} --html-dir "${PORTFOLIO_HTML_DIR}"`
   which prints the absolute path to the newest cached HTML. Fail-loud if no
   HTML exists (orchestrator would have fetched it before invoking you; this
   guards against invocation-order bugs).
-- **Output path** — build it yourself as
-  `/work/project/configs/portfolio_selectors/<MODEL_TAG>/<slug>.yaml` when
-  `MODEL_TAG` env var is non-empty, else
-  `/work/project/configs/portfolio_selectors/<slug>.yaml`. Read `MODEL_TAG`
-  from env via `echo $MODEL_TAG` or `os.environ`.
-- **Spec path** — `/work/project/schemas/edges_long_v0.1.spec.md`.
+- **Output path** — write below `${PORTFOLIO_OUTPUT_DIR}` as
+  `<MODEL_TAG>/<slug>.yaml` when `MODEL_TAG` is non-empty, otherwise
+  `<slug>.yaml`. The orchestrator must provide `PORTFOLIO_OUTPUT_DIR`.
+- **Spec path** — read from `${PORTFOLIO_SCHEMA_PATH}`.
 
 ## Output
 
@@ -149,13 +148,13 @@ as inadequate provenance and force a retry.
 ## Steps
 
 1. **Get firm metadata** via
-   `python3 ~/.claude/skills/portfolio-selector-generator/scripts/lookup_firm.py --slug ${SLUG}`.
+   `python3 ~/.claude/skills/portfolio-selector-generator/scripts/lookup_firm.py --slug ${SLUG} --config-path "${PORTFOLIO_CONFIG_PATH}"`.
    Note the `investor_id`, `canonical_name`, `portfolio_url`, `tech_flag`
    values for the YAML you'll emit.
 2. **Get HTML path** via
-   `python3 ~/.claude/skills/portfolio-selector-generator/scripts/resolve_html_path.py --slug ${SLUG}`.
+   `python3 ~/.claude/skills/portfolio-selector-generator/scripts/resolve_html_path.py --slug ${SLUG} --html-dir "${PORTFOLIO_HTML_DIR}"`.
    This is the file you'll Read next.
-3. **Read `spec_path`** (`/work/project/schemas/edges_long_v0.1.spec.md`) —
+3. **Read the schema** at `${PORTFOLIO_SCHEMA_PATH}` —
    only skim the columns table + which fields are extracted vs derived. Do
    NOT re-read on subsequent invocations once you know it.
 4. **Read the HTML file** returned by step 2. Look at the DOM structure:

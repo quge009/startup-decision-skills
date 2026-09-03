@@ -47,7 +47,7 @@ output behind.
 ### `generate_chip_pattern_candidates_v02.py` (candidate grammar freezer)
 
 Label blind. It opens only the three supplied v0.3 tables (chains, exposure,
-interface), projects the `SAFE_*` columns, validates the three checked-in JSON
+interface), projects the `SAFE_*` columns, validates three caller-supplied JSON
 schemas, and publishes a frozen candidate grammar to a new `--output-dir`
 (required). No outcome labels or prior pattern/results are accepted.
 
@@ -93,6 +93,11 @@ Individual input paths can still be passed explicitly per CLI flag.
 The engine itself is deterministic and validates its inputs and config
 strictly; the `run_manifest_v0.2.json` records script/config/input sha256s,
 pyarrow version, and git provenance for auditability.
+
+The release does not bundle the study's exhaustive registry, 501-company analysis
+subset, or frozen pattern config. Users must supply a compatible config and the
+schema contracts shipped with the companion dataset; this skill reproduces the
+engine, not the paper's full pattern-analysis dataset.
 
 ## Self-test
 
