@@ -91,17 +91,12 @@ def validate(data) -> list:
         except (KeyError, TypeError):
             pass
 
-    # dominant_moat_required
-    dmr = data.get("dominant_moat_required")
-    if not isinstance(dmr, dict):
-        errors.append("FAIL: dominant_moat_required must be object.")
-    else:
-        if not dmr.get("archetype"):
-            errors.append("FAIL: dominant_moat_required.archetype required.")
-        if not dmr.get("required_moat"):
-            errors.append("FAIL: dominant_moat_required.required_moat required.")
-        if dmr.get("candidate_status") not in {"pass", "marginal", "fail"}:
-            errors.append("FAIL: dominant_moat_required.candidate_status must be pass|marginal|fail.")
+    # v1.5 deliberately removed the archetype-specific required-moat gate.
+    if "dominant_moat_required" in data:
+        errors.append(
+            "FAIL: dominant_moat_required is a retired v1.4 field; "
+            "v1.5 applies one uniform VRIO assessment."
+        )
 
     # erosion_risks
     er = data.get("erosion_risks")

@@ -1,0 +1,40 @@
+{
+  "format": "pyarrow-schema-json-v1",
+  "table": "interface_events_v0.4.parquet",
+  "event_family": "interface",
+  "schema_version": "v0.4.0",
+  "fields": [
+    {"name":"event_id","type":"large_string","nullable":false},
+    {"name":"company_id","type":"large_string","nullable":false},
+    {"name":"investor_id","type":"large_string","nullable":true},
+    {"name":"raw_investor_name","type":"large_string","nullable":true},
+    {"name":"event_date","type":"large_string","nullable":true},
+    {"name":"event_type","type":"large_string","nullable":false},
+    {"name":"event_subtype","type":"large_string","nullable":true},
+    {"name":"title","type":"large_string","nullable":false},
+    {"name":"summary","type":"large_string","nullable":false},
+    {"name":"source_url","type":"large_string","nullable":true},
+    {"name":"source_type","type":"large_string","nullable":false},
+    {"name":"confidence","type":"double","nullable":false},
+    {"name":"scraped_at","type":"large_string","nullable":false},
+    {"name":"schema_version","type":"large_string","nullable":false},
+    {"name":"metadata_json","type":"large_string","nullable":false},
+    {"name":"associated_entity_id","type":"large_string","nullable":true},
+    {"name":"counterparty_resolution_status","type":"large_string","nullable":false}
+  ],
+  "metadata_order":["schema_version","company_entity","investor_entity","associated_entity"],
+  "metadata":{"schema_version":"v0.4.0","company_entity":"companies_entity_v0.3.parquet","investor_entity":"investors_entity_v0.3.parquet","associated_entity":"associated_entity_v0.1.parquet"},
+  "event_type_enum":["activist_action","board_change","exit","funding_participation","major_holder_change","other","secondary_transaction","service_provider","strategic_investment"],
+  "event_type_definitions":{
+    "activist_action":"An activist campaign, proxy contest, governance demand, or comparable investor action.",
+    "board_change":"An investor-related appointment, departure, or change on the company board or chair.",
+    "exit":"An investor exit or liquidity outcome through sale, acquisition, IPO, or comparable realization.",
+    "funding_participation":"A named investor's participation in, leadership of, or subscription to a primary company financing, including ordinary numbered funding rounds.",
+    "major_holder_change":"A material change in a major shareholder or ownership position that is not merely a numbered funding-round participation.",
+    "other":"A discrete investor-company relationship event that does not fit another interface type; not a numbered funding round.",
+    "secondary_transaction":"A secondary share sale, tender, or liquidity transaction involving existing holdings rather than primary company financing.",
+    "service_provider":"A legal, underwriting, financial-advisory, audit, consulting, or other professional-service relationship with the company; not an investment relationship.",
+    "strategic_investment":"An investor-company strategic or minority-position relationship distinct from ordinary numbered-round participation."
+  },
+  "counterparty_resolution_status_enum":["EXISTING_INVESTOR","NEW_INVESTOR","ASSOCIATED_ENTITY","AMBIGUOUS","UNRESOLVED"]
+}

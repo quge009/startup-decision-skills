@@ -48,22 +48,17 @@ runtime.
 
 ## Skill catalog
 
-### Proposal evaluation
+### Startup proposal evaluation — Paper Part I
 
-#### End-to-end workflow
+#### Proposal success prediction
 
 | Skill | What it does |
 |---|---|
 | [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
-
-#### Evaluation components
-
-| Skill | What it does |
-|---|---|
 | [`candidate-classifier`](skills/candidate-classifier/) | Produces the five-dimension candidate card, archetype, and founding year |
 | [`check-interpreter`](skills/check-interpreter/) | Builds queries, retrieves time-bounded evidence, and interprets market and moat checks |
 
-#### Validation and benchmarking
+#### Predictor validation and benchmarking
 
 | Skill | What it does |
 |---|---|
@@ -72,9 +67,9 @@ runtime.
 | [`cohort-sampling`](skills/cohort-sampling/) | Builds benchmark cohorts and deterministic train/validation samples |
 | [`f05-stats`](skills/f05-stats/) | Computes F0.5, Wilson intervals, and confusion-matrix statistics |
 
-### Investor and event-chain research
+### Investor and event-chain evaluation — Paper Part II
 
-#### Data construction
+#### Event-chain construction
 
 | Skill | What it does |
 |---|---|
@@ -84,7 +79,7 @@ runtime.
 | [`event-chain-builder`](skills/event-chain-builder/) | Resolves claims and materializes funding, exposure, and interface events into outcome chains |
 | [`interface-identity-resolution`](skills/interface-identity-resolution/) | Resolves reviewed Interface counterparties into investor or associated identities |
 
-#### Analysis
+#### Event-chain analysis
 
 | Skill | What it does |
 |---|---|
