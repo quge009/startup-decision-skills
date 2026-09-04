@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: twelve modular agent skills">
+  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: thirteen modular agent skills">
 </p>
 
 <h1 align="center">Startup Decision Skills</h1>
@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E" alt="MIT license"></a>
 </p>
 
-Twelve composable skills turn startup proposals and public-source records
+Thirteen composable skills turn startup proposals and public-source records
 into structured candidate cards, time-bounded evidence checks, canonical
 entities, event chains, and auditable retrospective patterns. The collection
 covers both sides of a startup decision:
@@ -37,8 +37,9 @@ cp -R startup-decision-skills/skills/. ~/.claude/skills/
 
 # Or install only the proposal-evaluation workflow:
 cp -r startup-decision-skills/skills/evaluate-proposal ~/.claude/skills/
-cp -r startup-decision-skills/skills/candidate-classifier ~/.claude/skills/
-cp -r startup-decision-skills/skills/check-interpreter ~/.claude/skills/
+cp -r startup-decision-skills/skills/candidate-profiler ~/.claude/skills/
+cp -r startup-decision-skills/skills/market-check ~/.claude/skills/
+cp -r startup-decision-skills/skills/moat-check ~/.claude/skills/
 ```
 
 Each folder follows the [Agent Skills](https://agentskills.io) convention: a
@@ -55,8 +56,9 @@ runtime.
 | Skill | What it does |
 |---|---|
 | [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
-| [`candidate-classifier`](skills/candidate-classifier/) | Produces the five-dimension candidate card, archetype, and founding year |
-| [`check-interpreter`](skills/check-interpreter/) | Builds queries, retrieves time-bounded evidence, and interprets market and moat checks |
+| [`candidate-profiler`](skills/candidate-profiler/) | Converts a proposal into a five-dimension candidate card with founding-year metadata |
+| [`market-check`](skills/market-check/) | Independently retrieves time-bounded evidence and evaluates market headroom and competitive forces |
+| [`moat-check`](skills/moat-check/) | Independently retrieves time-bounded evidence and evaluates VRIO strength and erosion risks |
 
 #### Predictor validation and benchmarking
 
@@ -111,8 +113,8 @@ for the workflows you plan to run:
 pip install -r requirements.txt
 ```
 
-LLM-guided skills require a compatible agent runtime. `check-interpreter`
-requires `TAVILY_API_KEY`. `event-evidence-collector` requires
+LLM-guided skills require a compatible agent runtime. `market-check` and
+`moat-check` require `TAVILY_API_KEY`. `event-evidence-collector` requires
 `OPENROUTER_API_KEY` plus `TAVILY_API_KEY`, or `SERPER_API_KEY` when selecting
 the optional Serper backend. `OPENROUTER_MODEL` and `OPENROUTER_URL` may override
 the endpoint defaults. Credentials must be supplied through the environment and
@@ -132,8 +134,8 @@ coverage of private company activity. Deterministic scripts validate schemas
 and fail loudly on contract violations; LLM- and web-dependent outputs still
 require source review.
 
-Before release, all 12 skills pass structural validation and workflow-level
-smoke tests. All 50 bundled Python files pass syntax checks, and their command
+Before release, all 13 skills pass structural validation and workflow-level
+smoke tests. All 52 bundled Python files pass syntax checks, and their command
 interfaces pass CLI checks.
 Repeated schema contracts and shared helpers are hash-checked for consistency.
 Long procedures use progressive disclosure through each skill's referenced

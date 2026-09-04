@@ -1,9 +1,5 @@
 {
   "candidate": "d2-agent-orchestration-marketplace",
-  "archetype": {
-    "primary": "Distribution",
-    "secondary": null
-  },
   "m_check": {
     "queries": [
       "agent runtime market size 2026 forecast",
@@ -22,20 +18,8 @@
       "[Distribution] Distribution sub-segment 替换示例: 'agent runtime' / 'generative media' / 'OSS catalog' / 'inference router'"
     ]
   },
-  "u_check": {
-    "queries": [
-      "d2-agent-orchestration-marketplace network effect bilateral 2026",
-      "OpenAI GPT Store, Anthropic Claude Skills, HuggingFace, OpenRouter switching cost user retention 2026",
-      "OpenAI GPT Store, Anthropic Claude Skills, HuggingFace, OpenRouter API churn rate 2026",
-      "agent runtime brand recognition developer 2026"
-    ],
-    "focus_notes": [
-      "[Distribution] Network Economies depth (chicken-egg vs already-flywheel?) + Switching Costs evidence"
-    ]
-  },
   "placeholders": {
     "candidate": "d2-agent-orchestration-marketplace",
-    "archetype": "Distribution",
     "target_market": "AI agent platform market",
     "sub_segment": "agent runtime",
     "incumbent": "OpenAI GPT Store, Anthropic Claude Skills, HuggingFace, OpenRouter",

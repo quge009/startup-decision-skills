@@ -6,7 +6,7 @@ Usage: python3 validate_card.py --card-text "<markdown>"
 Checks:
 - 5 required dim sections present (Revenue model / Customer segmentation / Cost structure /
   Differentiation·moat / Strategic vulnerabilities)
-- No "archetype" field anywhere (candidate card must not contain archetype)
+- No "archetype" field anywhere (candidate profiling is archetype-free)
 - Required forward-looking metadata fields present (Slug, Public/private, Founding year,
   Original proposal description, Closest existing vendor analogues)
 - Founding year value is a 4-digit year (1900-2099)
@@ -48,7 +48,7 @@ def validate(card_text: str) -> list:
     if re.search(r"^\s*\*?\*?Archetype\*?\*?\s*[:：]", card_text, flags=re.MULTILINE | re.IGNORECASE):
         errors.append(
             "FAIL: candidate card contains an 'Archetype' field. Candidate card must not "
-            "contain archetype — archetype is separate metadata in archetype.json."
+            "contain archetype — proposal evaluation is archetype-free."
         )
 
     # 2. Check 5 required dim sections

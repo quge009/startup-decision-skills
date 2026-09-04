@@ -24,7 +24,7 @@ VERDICT_TO_EMOJI = {
     "FAIL": "🔴",
 }
 
-# Uniform, archetype-agnostic weights.
+# Uniform M/U weights.
 WEIGHT_M = 0.5
 WEIGHT_U = 0.5
 
@@ -84,21 +84,18 @@ def determine_dominant_driver(m_verdict: str, u_verdict: str) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Aggregate M/U → final verdict (v1.5a)")
     parser.add_argument("--working-dir", required=True)
-    parser.add_argument("--archetype-file", help="Default <working_dir>/archetype.json (metadata only)")
     parser.add_argument("--m-file", help="Default <working_dir>/m_check.json")
     parser.add_argument("--u-file", help="Default <working_dir>/u_check.json")
     args = parser.parse_args()
 
     wd = Path(args.working_dir).resolve()
-    archetype_path = Path(args.archetype_file) if args.archetype_file else wd / "archetype.json"
     m_path = Path(args.m_file) if args.m_file else wd / "m_check.json"
     u_path = Path(args.u_file) if args.u_file else wd / "u_check.json"
 
-    for name, p in [("archetype", archetype_path), ("m", m_path), ("u", u_path)]:
+    for name, p in [("m", m_path), ("u", u_path)]:
         if not p.exists():
             sys.exit(f"ERROR: {name} file not found: {p}")
 
-    archetype_data = json.loads(archetype_path.read_text(encoding="utf-8"))
     m_data = json.loads(m_path.read_text(encoding="utf-8"))
     u_data = json.loads(u_path.read_text(encoding="utf-8"))
 
@@ -112,11 +109,6 @@ def main():
     dominant = determine_dominant_driver(m_verdict, u_verdict)
 
     output = {
-        "archetype": {
-            "primary": archetype_data.get("primary"),
-            "secondary": archetype_data.get("secondary"),
-            "cn_flag": archetype_data.get("cn_flag", False),
-        },
         "weights": {"m": WEIGHT_M, "u": WEIGHT_U},
         "verdicts_per_dim": {"m": m_verdict, "u": u_verdict},
         "weighted_score": agg["weighted_score"],

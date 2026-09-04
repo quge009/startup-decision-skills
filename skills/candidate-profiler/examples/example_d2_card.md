@@ -4,11 +4,11 @@
 **Public/private**: private (proposal stage)
 **Founding year**: 2025
 **Card last updated**: 2026-06-04
-**Card author**: auto-generated (via candidate-classifier skill)
+**Card author**: auto-generated (via candidate-profiler skill)
 
 **Original proposal description**: A multi-vendor AI agent orchestration marketplace where developers create agent workflows (combining tools, prompts, models) and publish them to a central hub. End users invoke agents via API or UI, paying per-call; creators earn revenue share. The platform takes 20% of transaction value as marketplace fee. Bidirectional network effects between creators and users. Differs from frontier-locked agent stores (OpenAI GPT Store, Claude Skills) by supporting any model backend. Initial focus developer + SMB. No proprietary GPU; uses third-party model APIs as backend.
 
-**Closest existing vendor analogues**: HuggingFace (Distribution archetype, OSS model hub + agent marketplace, ~$70M ARR), OpenRouter (multi-vendor inference router, $1.3B valuation, 1T+ tokens/day Feb 2026), Replicate (creator marketplace for generative AI).
+**Closest existing vendor analogues**: HuggingFace (OSS model hub and agent marketplace, ~$70M ARR), OpenRouter (multi-vendor inference router, $1.3B valuation, 1T+ tokens/day Feb 2026), Replicate (creator marketplace for generative AI).
 
 ---
 

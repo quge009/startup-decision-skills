@@ -1,6 +1,5 @@
 {
   "candidate": "d2-agent-orchestration-marketplace",
-  "archetype": "Distribution",
   "target_market": "AI agent platform market",
   "sub_segment": "agent runtime",
   "incumbent": "OpenAI GPT Store, Anthropic Claude Skills, HuggingFace, OpenRouter",

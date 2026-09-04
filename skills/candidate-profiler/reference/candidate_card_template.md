@@ -1,6 +1,6 @@
 # Candidate card — TEMPLATE (v1.5)
 
-> Used by the `candidate-classifier` skill (Step 1a) to structure the
+> Used by the `candidate-profiler` skill to structure the
 > 5-dim distillation of a free-text business proposal description.
 >
 > The card mirrors the same 5-dim shape as a vendor card, but with
@@ -18,7 +18,7 @@
 **Public/private**: `<public | private>` (proposal-stage candidates are usually private)
 **Founding year**: `<YYYY>` (REQUIRED — used downstream for M-check / U-check time-bounded Tavily retrieval window `[founding_year - 3y, founding_year]`)
 **Card last updated**: `<YYYY-MM-DD>`
-**Card author**: `auto-generated (via candidate-classifier skill)`
+**Card author**: `auto-generated (via candidate-profiler skill)`
 
 **Original proposal description**: `<verbatim original free-text proposal description, preserved per evaluate-proposal SKILL.md §"Free-text is primary input">`
 
@@ -134,10 +134,10 @@ the failure modes through?>`
 
 ---
 
-## Notes for the classifier
+## Notes for the profiler
 
-- Do NOT include an `Archetype` field in this card. Archetype is separate
-  metadata stored in `archetype.json` (per evaluate-proposal Step 1b).
+- Do not assign an archetype. Market and moat checks operate directly on the
+  proposal and this five-dimension profile.
 - `Founding year` is REQUIRED — if free-text doesn't state it explicitly,
   extract the most plausible year from any cited founding date, "founded
   in YYYY" phrasing, Crunchbase metadata, etc. If truly unrecoverable,

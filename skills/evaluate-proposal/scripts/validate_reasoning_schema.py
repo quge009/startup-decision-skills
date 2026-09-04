@@ -5,7 +5,6 @@ v1.5 reasoning.json shape (per evaluate-proposal Step 7):
     "verdict":        "PASS" | "WARN" | "FAIL",
     "verdict_emoji":  "✅" | "⚠" | "🔴",
     "verdict_text":   <string>,
-    "archetype":      {"primary": <label>, "secondary": <label?>, "cn_flag": bool},
     "mu_breakdown":   {
       "m_check":      {"verdict": ..., "som_headroom_b": <num>, "key_evidence": <string>},
       "u_check":      {"verdict": ..., "vrio_score": <0..4>, "key_evidence": <string>}
@@ -62,15 +61,8 @@ def validate(data) -> list:
         errors.append("FAIL: verdict_emoji mismatch verdict.")
     if not data.get("verdict_text"):
         errors.append("FAIL: verdict_text required.")
-
-    arc = data.get("archetype")
-    if not isinstance(arc, dict):
-        errors.append("FAIL: archetype must be object.")
-    else:
-        if not arc.get("primary"):
-            errors.append("FAIL: archetype.primary required.")
-        if not isinstance(arc.get("cn_flag"), bool):
-            errors.append("FAIL: archetype.cn_flag must be bool.")
+    if "archetype" in data:
+        errors.append("FAIL: archetype is not part of the proposal-evaluation schema.")
 
     # v1.5: mu_breakdown (NOT hmu_breakdown — H dropped)
     if "hmu_breakdown" in data:
