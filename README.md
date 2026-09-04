@@ -16,8 +16,32 @@
 
 Thirteen composable skills turn startup proposals and public-source records
 into structured candidate cards, time-bounded evidence checks, canonical
-entities, event chains, and auditable retrospective patterns. The collection
-covers both sides of a startup decision:
+entities, event chains, and auditable retrospective patterns.
+
+## What you can do
+
+| Research workflow | Start with | Result |
+|---|---|---|
+| **Paper Part I — Startup proposal evaluation** | [`evaluate-proposal`](skills/evaluate-proposal/) | An evidence-grounded proposal verdict with an auditable market and moat assessment |
+| **Paper Part II — Investor and event-chain evaluation** | [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Canonical investment relationships, event chains, patterns, and post-investment behavior summaries |
+
+## How it works
+
+```text
+Paper Part I
+Proposal → Candidate profile
+              ├→ Market check ─┐
+              └→ Moat check ───┴→ Score → Reasoned verdict
+
+Paper Part II
+Public sources → Portfolio edges → Canonical entities → Event evidence
+                                                            ├→ Funding + exposure events ───┐
+                                                            └→ Interface identity resolution ─┴→ Event chains
+                                                                                                  ├→ Patterns
+                                                                                                  └→ Post-investment behavior
+```
+
+The collection covers both sides of a startup decision:
 
 - **Before investment:** evaluate an idea without leaking its later outcome.
 - **After investment:** reconstruct how funding, exposure, and investor-company
@@ -26,8 +50,8 @@ covers both sides of a startup decision:
 ## Start here
 
 Choose the smallest skill that matches the task. Use
-[`evaluate-proposal`](skills/evaluate-proposal/) only for the complete proposal
-pipeline; use its component skills directly when you need one stage.
+[`evaluate-proposal`](skills/evaluate-proposal/) for the complete Part I
+workflow; install its component skills directly when you need only one stage.
 
 ```bash
 git clone https://github.com/quge009/startup-decision-skills.git
@@ -53,47 +77,52 @@ runtime.
 
 #### Proposal success prediction
 
-| Skill | What it does |
-|---|---|
-| [`evaluate-proposal`](skills/evaluate-proposal/) | Orchestrates proposal → candidate card → evidence checks → verdict and reasoning |
-| [`candidate-profiler`](skills/candidate-profiler/) | Converts a proposal into a five-dimension candidate card with founding-year metadata |
-| [`market-check`](skills/market-check/) | Independently retrieves time-bounded evidence and evaluates market headroom and competitive forces |
-| [`moat-check`](skills/moat-check/) | Independently retrieves time-bounded evidence and evaluates VRIO strength and erosion risks |
+1. [`evaluate-proposal`](skills/evaluate-proposal/) — **Run the end-to-end workflow.**
+   Coordinate proposal profiling, evidence checks, scoring, and reasoning;
+   produce `aggregate.json` and `reasoning.json`.
+2. [`candidate-profiler`](skills/candidate-profiler/) — **Profile the proposal.**
+   Structure its claims without adding later outcomes; produce
+   `candidate_card.md`.
+3. [`market-check`](skills/market-check/) — **Evaluate market opportunity.**
+   Retrieve and interpret time-bounded market evidence; produce `m_check.json`.
+4. [`moat-check`](skills/moat-check/) — **Evaluate defensibility.**
+   Assess VRIO strength and erosion risks using time-bounded evidence; produce
+   `u_check.json`.
 
 #### Predictor validation and benchmarking
 
-| Skill | What it does |
-|---|---|
-| [`benchmark-validation`](skills/benchmark-validation/) | Labels company outcomes, builds reproducible cohorts and holdouts, and computes F0.5 evaluation statistics |
-| [`leakage-scan`](skills/leakage-scan/) | Detects post-founding outcome information in candidate cards |
+- [`benchmark-validation`](skills/benchmark-validation/) — **Validate predictor
+  performance.** Create outcome labels, reproducible cohorts and holdouts, and
+  F0.5 statistics.
+- [`leakage-scan`](skills/leakage-scan/) — **Check temporal integrity.** Detect
+  post-founding outcome information in candidate cards.
 
 ### Investor and event-chain evaluation — Paper Part II
 
 #### Event-chain construction
 
-| Skill | What it does |
-|---|---|
-| [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Authors selectors, extracts portfolio pages, audits edges, and merges source tables |
-| [`entity-dedup`](skills/entity-dedup/) | Resolves company and investor names into stable canonical identities |
-| [`event-evidence-collector`](skills/event-evidence-collector/) | Collects source-grounded funding, exposure, and interface event claims |
-| [`event-chain-builder`](skills/event-chain-builder/) | Resolves claims and materializes funding, exposure, and interface events into outcome chains |
-| [`interface-identity-resolution`](skills/interface-identity-resolution/) | Resolves reviewed Interface counterparties into investor or associated identities |
+1. [`portfolio-edge-builder`](skills/portfolio-edge-builder/) — **Build the
+   investment graph.** Extract, audit, and merge investor portfolio
+   relationships into edge tables.
+2. [`entity-dedup`](skills/entity-dedup/) — **Resolve core entities.** Turn
+   inconsistent company and investor names into canonical entity tables.
+3. [`event-evidence-collector`](skills/event-evidence-collector/) — **Collect
+   event evidence.** Produce source-grounded funding, exposure, and Interface
+   claims.
+4. [`interface-identity-resolution`](skills/interface-identity-resolution/) —
+   **Resolve Interface counterparties.** Attach reviewed investor or associated
+   identities to Interface claims.
+5. [`event-chain-builder`](skills/event-chain-builder/) — **Build ordered event
+   chains.** Resolve claims and materialize funding, exposure, Interface, and
+   chain tables.
 
 #### Event-chain analysis
 
-| Skill | What it does |
-|---|---|
-| [`pattern-engine`](skills/pattern-engine/) | Freezes, audits, evaluates, and registers label-blind event-chain patterns |
-| [`post-investment-behavior`](skills/post-investment-behavior/) | Derives descriptive investor behavior from temporally ordered investment evidence |
-
-## How the collection fits together
-
-```text
-Proposal → Candidate card → Time-bounded M/U evidence → Decision
-                               │
-Public sources → Portfolio edges → Entities → Event evidence → Event chains → Patterns
-                                      └→ Interface identities → Post-investment behavior
-```
+- [`pattern-engine`](skills/pattern-engine/) — **Evaluate chain patterns.**
+  Freeze, audit, evaluate, and register label-blind pattern candidates.
+- [`post-investment-behavior`](skills/post-investment-behavior/) — **Describe
+  investor behavior.** Produce summaries from temporally ordered investment
+  evidence.
 
 `RECOMMEND` and `AVOID` in the pattern engine label **operating actions observed
 within event chains**. They are not labels assigned to companies.

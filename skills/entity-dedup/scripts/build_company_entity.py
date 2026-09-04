@@ -175,10 +175,19 @@ def main():
     # company_normalized_name → {first_raw_name, cusip, count}
     companies = {}  # norm_key → dict
     
-    for f in sorted(edges_dir.glob("*_v0.2.parquet")):
-        df = pq.read_table(f, columns=[
-            "company_name_raw", "company_normalized_name", "metadata_json"
-        ]).to_pandas()
+    edge_files = sorted(edges_dir.glob("*.parquet"))
+    if not edge_files:
+        raise FileNotFoundError(f"no edge Parquets found in {edges_dir}")
+    for f in edge_files:
+        available = set(pq.read_schema(f).names)
+        required = {"company_name_raw", "company_normalized_name"}
+        missing = sorted(required - available)
+        if missing:
+            raise ValueError(f"missing required edge columns in {f}: {missing}")
+        columns = ["company_name_raw", "company_normalized_name"]
+        if "metadata_json" in available:
+            columns.append("metadata_json")
+        df = pq.read_table(f, columns=columns).to_pandas()
         
         for _, row in df.iterrows():
             raw = row["company_name_raw"]

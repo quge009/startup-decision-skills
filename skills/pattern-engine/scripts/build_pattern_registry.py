@@ -22,11 +22,20 @@ def canonical_bytes(value: Any) -> bytes:
 
 def load_records(path: Path, batch: str) -> list[dict[str, Any]]:
     value = json.loads(path.read_text(encoding="utf-8"))
-    rows = value.get("patterns") if isinstance(value, dict) else value
+    reviewed = isinstance(value, dict) and isinstance(value.get("final_candidates"), list)
+    rows = value.get("final_candidates") if reviewed else (
+        value.get("patterns") if isinstance(value, dict) else value
+    )
     if not isinstance(rows, list):
-        raise ValueError(f"{path}: expected a JSON array or an object with patterns[]")
+        raise ValueError(
+            f"{path}: expected an array, patterns[], or reviewed final_candidates[]"
+        )
     output = []
     for index, row in enumerate(rows):
+        if reviewed and isinstance(row, dict):
+            if row.get("source_track") != "ACTION_ELIGIBLE":
+                continue
+            row = {**row, "pattern_id": row.get("candidate_id")}
         if not isinstance(row, dict) or not REQUIRED <= set(row):
             raise ValueError(f"{path}: pattern {index} lacks {sorted(REQUIRED)}")
         if row["result"] not in RESULTS:

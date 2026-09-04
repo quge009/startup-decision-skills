@@ -59,7 +59,7 @@ POLICY = {
         "cadence/density",
         "observed history/position",
     ],
-    "global_merge_key": "company_mask_sha256",
+    "global_merge_key": ["track", "company_mask_sha256"],
     "representative_order": [
         "lowest AST complexity",
         "fewest rendered words",
@@ -478,9 +478,9 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
         raise ValueError(f"production pair count mismatch: {pair_count} != {expected_count}")
 
     remaining_ids: set[str] = set()
-    retained_mask_by_id: dict[str, str] = {}
-    selected_by_mask: dict[str, dict[str, Any]] = {}
-    retained_per_mask: Counter[str] = Counter()
+    retained_group_by_id: dict[str, tuple[str, str]] = {}
+    selected_by_group: dict[tuple[str, str], dict[str, Any]] = {}
+    retained_per_group: Counter[tuple[str, str]] = Counter()
     deletion_counts: Counter[str] = Counter()
     for pair in pairs:
         candidate_id = pair.get("id")
@@ -500,8 +500,12 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
         mask = pair.get("company_mask_sha256")
         if not isinstance(mask, str) or len(mask) != 64:
             raise ValueError(f"candidate {candidate_id} has an invalid company mask")
-        retained_mask_by_id[candidate_id] = mask
-        retained_per_mask[mask] += 1
+        track = pair.get("track")
+        if not isinstance(track, str) or not track:
+            raise ValueError(f"candidate {candidate_id} has an invalid track")
+        group = (track, mask)
+        retained_group_by_id[candidate_id] = group
+        retained_per_group[group] += 1
         candidate = {
             "candidate_id": candidate_id,
             "company_mask_sha256": mask,
@@ -512,9 +516,9 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
             "structural_dimension": pair.get("structural_dimension"),
             "selection_key": _selection_key(pair, rendered),
         }
-        prior = selected_by_mask.get(mask)
+        prior = selected_by_group.get(group)
         if prior is None or candidate["selection_key"] < prior["selection_key"]:
-            selected_by_mask[mask] = candidate
+            selected_by_group[group] = candidate
 
     del pairs, pair_payload, anchors_payload, structural_payload, anchors, structural
     gc.collect()
@@ -528,9 +532,9 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
 
     original_counts: Counter[str] = Counter()
     retained_counts: Counter[str] = Counter()
-    group_signatures: dict[str, tuple[Any, ...]] = {}
-    group_results: dict[str, str] = {}
-    group_statistics: dict[str, dict[str, Any]] = {}
+    group_signatures: dict[tuple[str, str], tuple[Any, ...]] = {}
+    group_results: dict[tuple[str, str], str] = {}
+    group_statistics: dict[tuple[str, str], dict[str, Any]] = {}
     for row in rows:
         candidate_id = row.get("candidate_id")
         if candidate_id not in remaining_ids:
@@ -540,22 +544,24 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
         if _source_result_as_four(row.get("result")) != result:
             raise ValueError(f"source Result disagrees with p/sign rule: {candidate_id}")
         original_counts[result] += 1
-        mask = retained_mask_by_id.get(candidate_id)
-        if mask is None:
+        group = retained_group_by_id.get(candidate_id)
+        if group is None:
             continue
         retained_counts[result] += 1
         signature = _statistical_signature(row, result)
-        prior_signature = group_signatures.get(mask)
+        prior_signature = group_signatures.get(group)
         if prior_signature is not None and prior_signature != signature:
-            raise ValueError(f"same company mask has inconsistent statistics: {mask}")
+            raise ValueError(
+                f"same track and company mask have inconsistent statistics: {group}"
+            )
         if prior_signature is None:
-            group_signatures[mask] = signature
-            group_results[mask] = result
-            group_statistics[mask] = _statistics(row)
+            group_signatures[group] = signature
+            group_results[group] = result
+            group_statistics[group] = _statistics(row)
     if remaining_ids:
         raise ValueError(f"evaluation is missing {len(remaining_ids)} frozen candidates")
-    if set(selected_by_mask) != set(group_signatures):
-        raise ValueError("retained company-mask groups are incomplete after evaluation")
+    if set(selected_by_group) != set(group_signatures):
+        raise ValueError("retained track/company-mask groups are incomplete after evaluation")
 
     merged_counts = Counter(group_results.values())
     matrices = [
@@ -569,18 +575,18 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
         raise AssertionError("original matrix row does not conserve the frozen pair count")
 
     final_candidates = []
-    for mask, candidate in selected_by_mask.items():
-        result = group_results[mask]
+    for group, candidate in selected_by_group.items():
+        result = group_results[group]
         output_candidate = {key: value for key, value in candidate.items() if key != "selection_key"}
         output_candidate.update({
             "result": result,
-            "statistics": group_statistics[mask],
-            "patterns_with_same_company_mask": retained_per_mask[mask],
+            "statistics": group_statistics[group],
+            "patterns_with_same_track_and_company_mask": retained_per_group[group],
         })
         final_candidates.append(output_candidate)
     final_candidates.sort(key=lambda item: (item["company_mask_sha256"], item["candidate_id"]))
 
-    retained_count = len(retained_mask_by_id)
+    retained_count = len(retained_group_by_id)
     policy_hash = hashlib.sha256(canonical_json(POLICY).encode()).hexdigest()
     result = {
         "review_version": POLICY["version"],
@@ -591,9 +597,9 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
                                        for reason in POLICY["removal_precedence"]},
             "removed_pattern_count": sum(deletion_counts.values()),
             "retained_pattern_count": retained_count,
-            "global_company_mask_count": len(selected_by_mask),
-            "merged_pattern_count": retained_count - len(selected_by_mask),
-            "same_mask_statistical_consistency": "PASS",
+            "global_track_company_mask_count": len(selected_by_group),
+            "merged_pattern_count": retained_count - len(selected_by_group),
+            "same_track_mask_statistical_consistency": "PASS",
         },
         "final_candidates": final_candidates,
         "policy": POLICY,

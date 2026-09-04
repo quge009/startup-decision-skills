@@ -23,11 +23,15 @@ are written atomically.
    `RECOMMEND` and `AVOID` as labels on operating actions represented by a
    Pattern, never as company labels or predictions.
 4. Use `review_pattern_results.py` to remove invalid or
-   uninterpretable candidates and merge candidates selecting the same companies.
+   uninterpretable candidates and merge candidates in the same analysis track
+   that select the same companies. Action and descriptive-association tracks
+   remain separate because their result semantics differ.
    Supply freeze, evaluation, and output paths explicitly; use `--expected-count`
    only when reproducing a pinned run.
-5. Use `build_pattern_registry.py --batch NAME=JSON ...`; supply universe
-   identity, size, ordering, and reviewed batches explicitly.
+5. Pass each reviewed output directly to
+   `build_pattern_registry.py --batch NAME=JSON ...`; it admits only
+   `ACTION_ELIGIBLE` candidates. Supply universe identity, size, and ordering
+   explicitly.
 6. Run `analyze_patterns.py` for a caller-supplied Pattern specification.
    Supply entity/chain label-column names and success/failure values explicitly
    to materialize chain, company, investor, prevalence, identity-coverage, and
