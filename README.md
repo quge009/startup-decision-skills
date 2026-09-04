@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: fourteen modular agent skills">
+  <img src="assets/startup-decision-skills-banner-v2.svg" width="100%" alt="Startup Decision Skills: twelve modular agent skills">
 </p>
 
 <h1 align="center">Startup Decision Skills</h1>
@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E" alt="MIT license"></a>
 </p>
 
-Fourteen composable skills turn startup proposals and public-source records
+Twelve composable skills turn startup proposals and public-source records
 into structured candidate cards, time-bounded evidence checks, canonical
 entities, event chains, and auditable retrospective patterns. The collection
 covers both sides of a startup decision:
@@ -62,10 +62,8 @@ runtime.
 
 | Skill | What it does |
 |---|---|
-| [`outcome-labeling`](skills/outcome-labeling/) | Maps company records to the fixed eight-label outcome ontology |
+| [`benchmark-validation`](skills/benchmark-validation/) | Labels company outcomes, builds reproducible cohorts and holdouts, and computes F0.5 evaluation statistics |
 | [`leakage-scan`](skills/leakage-scan/) | Detects post-founding outcome information in candidate cards |
-| [`cohort-sampling`](skills/cohort-sampling/) | Builds benchmark cohorts and deterministic train/validation samples |
-| [`f05-stats`](skills/f05-stats/) | Computes F0.5, Wilson intervals, and confusion-matrix statistics |
 
 ### Investor and event-chain evaluation — Paper Part II
 
@@ -134,8 +132,8 @@ coverage of private company activity. Deterministic scripts validate schemas
 and fail loudly on contract violations; LLM- and web-dependent outputs still
 require source review.
 
-Before release, all 14 skills pass structural validation and workflow-level
-smoke tests. All 51 bundled Python files pass syntax checks, and their command
+Before release, all 12 skills pass structural validation and workflow-level
+smoke tests. All 50 bundled Python files pass syntax checks, and their command
 interfaces pass CLI checks.
 Repeated schema contracts and shared helpers are hash-checked for consistency.
 Long procedures use progressive disclosure through each skill's referenced
