@@ -30,8 +30,8 @@ Mappings:
   weighted_score = 0.5 * M_score + 0.5 * U_score  ∈ [0, 1]
 
 Threshold sweep for verdict is caller's responsibility (research script
-scans PASS threshold ∈ [0, 1]; production landing would set a single
-constant). No production landing yet — this module is helpers only.
+scans PASS threshold ∈ [0, 1]; a deployed configuration would set a single
+constant). This module provides helpers only.
 """
 
 import math

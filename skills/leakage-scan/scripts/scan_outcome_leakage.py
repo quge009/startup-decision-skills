@@ -23,8 +23,8 @@ Scan scope:
   - Structural: card metadata fields
 
 Output:
-  - /tmp/leakage_scan_output.json — per-row leakage flags
-  - /tmp/leakage_scan_report.md — human-readable summary + samples
+  - caller-supplied JSON path — per-row leakage flags
+  - caller-supplied Markdown path — human-readable summary + samples
 """
 
 import argparse

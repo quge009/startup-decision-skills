@@ -263,20 +263,13 @@ AMBIGUOUS_TRUTH_LABELS = frozenset({
     "UNKNOWN",
 })
 
-# Framework verdict labels.
-COMMITTED_VERDICTS = frozenset({"PASS", "FAIL"})
-
-HEDGED_VERDICTS = frozenset({
-    "WARN",          # framework declined to commit to PASS / FAIL — hedged
-    "OUT_OF_SCOPE",  # framework declared the candidate outside its evaluation
-                     # taxonomy — neither prediction nor non-prediction
-})
+VALID_VERDICTS = frozenset({"PASS", "WARN", "FAIL"})
 
 EVALUATION_CELL_TYPES = (
     "TP",                          # PASS  + SUCCESS truth
     "FP",                          # PASS  + FAILURE truth
-    "TN",                          # WARN / FAIL / OOS + FAILURE truth (predicted-negative × FAILURE)
-    "FN",                          # WARN / FAIL / OOS + SUCCESS truth (predicted-negative × SUCCESS)
+    "TN",                          # WARN / FAIL + FAILURE truth
+    "FN",                          # WARN / FAIL + SUCCESS truth
     "FILTER_truth_ambiguous",      # any verdict + INDETERMINATE / UNKNOWN truth
     "UNEXPECTED",                  # diagnostic for invalid input
 )
@@ -288,7 +281,7 @@ def verdict_outcome_evaluation_class(verdict, outcome_label):
 
     **Evaluation definition:**
     binary precision / recall / F0.5 use predicted-positive = `PASS` and
-    predicted-negative = `WARN` ∪ `FAIL` ∪ `OUT_OF_SCOPE` ∪ no-verdict. Truth-side
+    predicted-negative = `WARN` ∪ `FAIL`. Truth-side
     `INDETERMINATE` / `UNKNOWN` are filtered.
 
     Truth-side commitment threshold (Decision 2): EQUIVOCAL_DELISTED is
@@ -297,13 +290,16 @@ def verdict_outcome_evaluation_class(verdict, outcome_label):
     sensitivity analysis that flips this to FAILURE to bound the metric.
 
     Args:
-      verdict: one of "PASS", "WARN", "FAIL", "OUT_OF_SCOPE" (or empty/None for no-verdict)
+      verdict: one of "PASS", "WARN", or "FAIL"
       outcome_label: one of VALID_LABELS (8 outcome labels)
 
     Returns:
       One of EVALUATION_CELL_TYPES.
     """
-    # Truth-side ambiguity always filters first — no point evaluating any
+    if verdict not in VALID_VERDICTS:
+        return "UNEXPECTED"
+
+    # Truth-side ambiguity filters after validating the framework output.
     # prediction against an outcome we can't determine.
     if outcome_label in AMBIGUOUS_TRUTH_LABELS:
         return "FILTER_truth_ambiguous"
@@ -315,8 +311,7 @@ def verdict_outcome_evaluation_class(verdict, outcome_label):
     if truth is None:
         return "UNEXPECTED"
 
-    # REPORT §2b: predicted-positive = PASS, predicted-negative = everything else
-    # (WARN ∪ FAIL ∪ OUT_OF_SCOPE ∪ no-verdict).
+    # Predicted-positive = PASS; predicted-negative = WARN or FAIL.
     if verdict == "PASS":
         return "TP" if truth == "SUCCESS" else "FP"
     else:
@@ -338,18 +333,15 @@ _BRIDGE_TEST_CASES = [
     # FAIL × SUCCESS → FN
     ("FAIL", "POSITIVE_IPO", "FN"),
     ("FAIL", "POSITIVE_ACQUIRED", "FN"),
-    # WARN / OUT_OF_SCOPE = predicted negative (REPORT §2b) → TN or FN
+    # WARN = predicted negative → TN or FN
     ("WARN", "POSITIVE_IPO", "FN"),
     ("WARN", "POSITIVE_LATE_STAGE_FUNDED", "FN"),
     ("WARN", "NEGATIVE_CLOSED", "TN"),
     ("WARN", "NEGATIVE_NO_TRACTION", "TN"),
-    ("OUT_OF_SCOPE", "POSITIVE_LATE_STAGE_FUNDED", "FN"),
-    ("OUT_OF_SCOPE", "NEGATIVE_NO_TRACTION", "TN"),
     # Truth-side ambiguous → FILTER_truth_ambiguous regardless of prediction
     ("PASS", "INDETERMINATE", "FILTER_truth_ambiguous"),
     ("FAIL", "INDETERMINATE", "FILTER_truth_ambiguous"),
     ("WARN", "INDETERMINATE", "FILTER_truth_ambiguous"),
-    ("OUT_OF_SCOPE", "UNKNOWN", "FILTER_truth_ambiguous"),
 ]
 
 

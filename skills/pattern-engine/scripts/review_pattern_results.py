@@ -475,7 +475,7 @@ def review(freeze_dir: Path, evaluation_path: Path, output_path: Path, *,
     if pair_count != manifest_count:
         raise ValueError(f"pair count disagrees with manifest: {pair_count} != {manifest_count}")
     if expected_count is not None and pair_count != expected_count:
-        raise ValueError(f"production pair count mismatch: {pair_count} != {expected_count}")
+        raise ValueError(f"frozen pair count mismatch: {pair_count} != {expected_count}")
 
     remaining_ids: set[str] = set()
     retained_group_by_id: dict[str, tuple[str, str]] = {}

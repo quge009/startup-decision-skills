@@ -39,6 +39,10 @@ existing output unless `--force-output` is passed, and fail loud on missing
 inputs, unknown company_ids, unexpected schema versions, or unsupported outcome
 types.
 
+The chain builder accepts funding/exposure v0.3 and Interface v0.3 or
+identity-resolved v0.4 inputs. Prefer reviewed Interface v0.4 when identity
+materialization is part of the workflow.
+
 `event_claim_resolution.py` groups rows by `event_id`, selects the uniquely
 highest-confidence claim (earliest input order breaks ties), preserves every
 raw claim in `metadata_json.claims`, and reports semantic conflicts. The three
@@ -53,7 +57,10 @@ python3 scripts/build_funding_events.py --entity-path ... --cache-dir ... --outp
 python3 scripts/build_exposure_events.py --entity-path ... --cache-dir ... --output-path ...
 python3 scripts/build_interface_events.py --entity-path ... --cache-dir ... --output-path ...
 
-# Chain them into chain:... records.
+# When counterpart identity matters, review the raw Interface table with the
+# interface-identity-resolution skill and materialize Interface v0.4 here.
+
+# Chain the funding/exposure tables and one Interface version into chain:... records.
 python3 scripts/build_chains.py --entity-path ... --funding-path ... \
   --exposure-path ... --interface-path ... --output-path ... \
   --company-label-column label --company-outcome-label-column outcome_label

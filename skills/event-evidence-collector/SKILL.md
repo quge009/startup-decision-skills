@@ -11,8 +11,8 @@ interfaces.
 
 ## Workflow
 
-1. Supply a company entity Parquet containing `company_id`, `canonical_name`, and
-   `slug` through `--entity-path`.
+1. Supply a company entity Parquet containing `company_id`,
+   `company_canonical_name`, `slug`, and `edge_count` through `--entity-path`.
 2. Set `TAVILY_API_KEY` and `OPENROUTER_API_KEY`. Optionally set
    `OPENROUTER_MODEL` and `OPENROUTER_URL`. If using `--search-backend serper`,
    set `SERPER_API_KEY` instead of the Tavily key.
@@ -22,6 +22,11 @@ interfaces.
    `--force` only when replacement is intended.
 5. Pass the caches to `event-chain-builder`. Collection and materialization stay
    separate so a partial cache cannot silently shrink an existing table.
+
+A cache containing `[]` means the selected search backend completed but yielded
+no usable evidence. If every search request fails, or structured LLM extraction
+fails, the collector exits without writing that company's cache; fix the error
+and rerun it rather than treating transport failure as an observed absence.
 
 The schemas under `schemas/` are authoritative for event-type definitions.
 Search results are evidence candidates, not truth: retain URLs, reject semantic

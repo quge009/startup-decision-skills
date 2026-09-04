@@ -31,6 +31,6 @@ materialize reviewed decisions; they do not perform adjudication themselves.
 
 ## Requirements
 
-Python 3.10+ and `pyarrow==25.0.0`. The two materializers intentionally publish
-only to new paths below `/tmp`; copy reviewed bytes to their release destination
-after all checks pass. The package initializer may write to any new directory.
+Python 3.10+ and `pyarrow==25.0.0`. Materializers publish only to new paths and
+never overwrite their source inputs. The package initializer may also write to
+any new directory.

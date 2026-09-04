@@ -22,9 +22,26 @@ sys.path.insert(0, str(Path(__file__).parent))
 from schema_contract_loader import load_schema_contract
 
 SCHEMA_VERSION = "v0.3.0"
+INPUT_SCHEMA_VERSIONS = {
+    "funding": {"v0.3.0"},
+    "exposure": {"v0.3.0"},
+    "interface": {"v0.3.0", "v0.4.0"},
+}
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas/chains_v0.3.schema.json"
 CHAINS_SCHEMA, OUTCOME_TYPES = load_schema_contract(SCHEMA_PATH)
+
+
+def require_single_schema_version(frame: pd.DataFrame, family: str, source: Path) -> str:
+    """Return the sole supported schema version or stop on mixed/unknown input."""
+    versions = set(frame["schema_version"].dropna().astype(str))
+    allowed = INPUT_SCHEMA_VERSIONS[family]
+    if len(versions) != 1 or not versions <= allowed:
+        raise SystemExit(
+            f"expected exactly one supported {family} schema version in {source}; "
+            f"found {sorted(versions)}, allowed {sorted(allowed)}"
+        )
+    return next(iter(versions))
 
 
 def _parse_date(value):
@@ -126,12 +143,12 @@ def main() -> None:
             "event_id", "company_id", "event_type", "event_date", "schema_version",
         }, source)
 
-    for frame, source in (
-        (funding, funding_path), (exposure, exposure_path), (interface, interface_path),
+    for family, frame, source in (
+        ("funding", funding, funding_path),
+        ("exposure", exposure, exposure_path),
+        ("interface", interface, interface_path),
     ):
-        versions = set(frame["schema_version"].dropna().astype(str))
-        if versions != {SCHEMA_VERSION}:
-            raise SystemExit(f"unexpected schema versions in {source}: {sorted(versions)}")
+        require_single_schema_version(frame, family, source)
 
     invalid_outcomes = sorted(set(funding["event_type"].dropna()) - OUTCOME_TYPES)
     if invalid_outcomes:

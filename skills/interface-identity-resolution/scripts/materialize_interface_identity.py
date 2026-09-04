@@ -2,7 +2,7 @@
 """Validate and materialize Interface counterparty identity package v1.
 
 Offline by construction: this module imports no network client, accepts only pinned
-local inputs, never mutates them, and publishes only to a new directory below /tmp.
+local inputs, never mutates them, and publishes only to a new output directory.
 """
 from __future__ import annotations
 
@@ -26,7 +26,6 @@ RESEARCH_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from apply_interface_name_recovery import source_row_sha256  # noqa:E402
 
-TMP_ROOT = Path("/tmp")
 REQUIRED_PYARROW_VERSION = "25.0.0"
 STATUSES = {"EXISTING_INVESTOR", "NEW_INVESTOR", "ASSOCIATED_ENTITY", "AMBIGUOUS", "UNRESOLVED"}
 PARQUET_WRITE_OPTIONS = {"compression": "snappy", "version": "2.6", "data_page_version": "1.0", "use_dictionary": True, "write_statistics": True, "row_group_size": 65536}
@@ -85,7 +84,7 @@ def _date(value: Any) -> Any:
 
 def _entity_schema(source: pa.Schema) -> pa.Schema:
     if source.names != ENTITY_COLUMNS:
-        raise ValueError(f"production investor columns differ from actual 22-column contract: {source.names}")
+        raise ValueError(f"investor columns differ from the required 22-column contract: {source.names}")
     fields = []
     for field in source:
         typ = field.type
@@ -129,17 +128,13 @@ def _interface_schema(source: pa.Schema) -> pa.Schema:
 
 def _validate_output_dir(path: Path, inputs: list[Path]) -> Path:
     canonical = path.expanduser().resolve(strict=False)
-    try:
-        canonical.relative_to(TMP_ROOT)
-    except ValueError as error:
-        raise ValueError(f"output directory must be below /tmp: {path}") from error
-    if canonical == TMP_ROOT:
-        raise ValueError("output directory cannot be /tmp itself")
     if canonical.exists() or canonical.is_symlink():
         raise FileExistsError(f"refusing to overwrite output directory: {canonical}")
     input_paths = {p.expanduser().resolve(strict=False) for p in inputs}
     if canonical in input_paths:
         raise ValueError("output aliases a protected input")
+    if any(canonical in source.parents for source in input_paths):
+        raise ValueError("output directory cannot contain a protected input")
     return canonical
 
 
@@ -442,7 +437,7 @@ def materialize(args: argparse.Namespace) -> dict[str, Any]:
                 "base_v0_2_investors_without_retained_provenance": len(base_ids - retained_base_provenance_ids),
             },
             "runtime": {"pyarrow_version": pa.__version__, "parquet_write_options": PARQUET_WRITE_OPTIONS, "network_access": "none"},
-            "invariants": {"source_event_ids_unchanged": [x["event_id"] for x in source.to_pylist()] == [x["event_id"] for x in interface_rows], "source_raw_names_unchanged": [x["raw_investor_name"] for x in source.to_pylist()] == [x["raw_investor_name"] for x in interface_rows], "event_semantics_unchanged": True, "foreign_keys_valid": True, "authoritative_base_preserved_value_for_value": entity_rows[:len(base_rows)] == base_rows, "legacy_entities_appended": False, "legacy_provenance_retained_only_for_unique_base_mapping": True, "interface_recovery_field_provenance_complete": True, "base_table_field_provenance_completeness_asserted": False, "duplicates_rejected": True, "outputs_below_tmp": True, "network_access_performed": False},
+            "invariants": {"source_event_ids_unchanged": [x["event_id"] for x in source.to_pylist()] == [x["event_id"] for x in interface_rows], "source_raw_names_unchanged": [x["raw_investor_name"] for x in source.to_pylist()] == [x["raw_investor_name"] for x in interface_rows], "event_semantics_unchanged": True, "foreign_keys_valid": True, "authoritative_base_preserved_value_for_value": entity_rows[:len(base_rows)] == base_rows, "legacy_entities_appended": False, "legacy_provenance_retained_only_for_unique_base_mapping": True, "interface_recovery_field_provenance_complete": True, "base_table_field_provenance_completeness_asserted": False, "duplicates_rejected": True, "new_output_directory": True, "network_access_performed": False},
         }
         expected = manifest.get("expected_materialization")
         if expected is not None:

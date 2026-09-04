@@ -41,7 +41,7 @@ business archetype and does not perform web research.
   label and not an investment recommendation.
 - Do not assign a business archetype. Historical archetype analysis, when
   needed for research benchmarking, belongs to `benchmark-validation` and is
-  outside this production evaluation workflow.
+  outside this proposal-evaluation workflow.
 - Do not add post-founding outcome evidence. Market and moat evidence is
   collected later by the independent `market-check` and `moat-check` skills.
 

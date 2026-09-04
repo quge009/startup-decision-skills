@@ -97,6 +97,7 @@ def web_search(company_name: str) -> list[dict]:
         raise RuntimeError("TAVILY_API_KEY is not set")
     all_results = []
     seen_urls = set()
+    successful_queries = 0
     for tmpl in QUERY_TEMPLATES:
         query = tmpl.format(company=company_name)
         for attempt in range(3):
@@ -110,6 +111,7 @@ def web_search(company_name: str) -> list[dict]:
                     time.sleep(2)
                     continue
                 results = json.loads(r.stdout).get("results", [])
+                successful_queries += 1
                 for res in results:
                     url = res.get("url", "")
                     if url and url in seen_urls:
@@ -120,6 +122,8 @@ def web_search(company_name: str) -> list[dict]:
                 break
             except (subprocess.TimeoutExpired, json.JSONDecodeError):
                 time.sleep(2)
+    if successful_queries == 0:
+        raise RuntimeError(f"all Tavily searches failed for {company_name}")
     # Identity filter: keep only results whose title/content/raw_content
     # mention the target company (case-insensitive). Prevents LLM from
     # attributing events from semantically-drifted results (Vaderis
@@ -159,18 +163,23 @@ def extract_events(company: str, snippets: list[dict]) -> list[dict]:
             result = json.loads(resp.read().decode())
             content = (result["choices"][0]["message"].get("content") or "").strip()
             if not content:
-                print(f"    LLM returned empty content (finish_reason={result['choices'][0].get('finish_reason')})")
-                return []
+                raise RuntimeError(
+                    "LLM returned empty content "
+                    f"(finish_reason={result['choices'][0].get('finish_reason')})"
+                )
             if content.startswith("```"):
                 content = content.split("```", 2)[1]
                 if content.startswith("json"):
                     content = content[4:]
                 content = content.strip().rstrip("`").strip()
             arr = json.loads(content)
-            return arr if isinstance(arr, list) else []
+            if not isinstance(arr, list):
+                raise RuntimeError("LLM response is not a JSON array")
+            return arr
     except Exception as e:
-        print(f"    LLM extract failed: {type(e).__name__}: {str(e)[:120]}")
-        return []
+        raise RuntimeError(
+            f"LLM extraction failed for {company}: {type(e).__name__}: {str(e)[:120]}"
+        ) from e
 
 
 def load_cache(slug: str):
@@ -198,6 +207,7 @@ def web_search_serper(company_name: str) -> list[dict]:
 
     all_results = []
     seen_urls = set()
+    successful_queries = 0
     for tmpl in QUERY_TEMPLATES:
         query = tmpl.format(company=company_name)
         body = json.dumps({"q": query, "num": 8}).encode()
@@ -207,6 +217,7 @@ def web_search_serper(company_name: str) -> list[dict]:
             try:
                 with urllib.request.urlopen(req, timeout=15) as resp:
                     data = json.loads(resp.read().decode())
+                successful_queries += 1
                 for r in data.get("organic", []):
                     url = r.get("link", "")
                     if url and url not in seen_urls:
@@ -224,6 +235,9 @@ def web_search_serper(company_name: str) -> list[dict]:
             except Exception:
                 time.sleep(2)
         time.sleep(0.5)
+
+    if successful_queries == 0:
+        raise RuntimeError(f"all Serper searches failed for {company_name}")
 
     # Identity filter
     key = company_name.lower()

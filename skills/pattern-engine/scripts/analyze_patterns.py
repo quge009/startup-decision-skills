@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build deterministic, configuration-driven event-chain Pattern artifacts.
 
-This analysis-only derived layer reads versioned production Parquets, never
+This analysis-only derived layer reads versioned source Parquets, never
 mutates them, and writes auditable Chain, company, Pattern, and investor
 artifacts. Pattern definitions and precedence are external configuration.
 """
@@ -1199,7 +1199,7 @@ def interface_identity_and_profiles(
         if investor_id:
             if investor_id not in investor_by_id:
                 raise ValueError(f"interface investor_id missing from entity table: {investor_id}")
-            status = "production_resolved"
+            status = "canonical_resolved"
             resolved_rows.append(row)
         elif associated_entity_id:
             status = "associated_entity"
@@ -1218,7 +1218,7 @@ def interface_identity_and_profiles(
         identity_rows.append({
             "event_id": row["event_id"], "company_id": row["company_id"],
             "event_type": row["event_type"], "raw_investor_name": raw_name or None,
-            "production_investor_id": investor_id,
+            "canonical_investor_id": investor_id,
             "analysis_normalized_exact_candidate_id": analysis_candidate_id,
             "identity_status": status,
         })
@@ -1247,7 +1247,7 @@ def interface_identity_and_profiles(
     coverage = {
         "total_interface_rows": len(interface_rows), "row_status_counts": dict(status_counts),
         "unique_raw_name_counts": {status: len(names) for status, names in sorted(raw_names_by_status.items())},
-        "production_resolved_investors": len(grouped),
+        "canonical_resolved_investors": len(grouped),
         "analysis_normalized_exact_candidate_rows": normalized_exact_candidate_rows,
         "mode_discovery_eligible_investors": sum(row["mode_discovery_eligible"] for row in profiles),
         "core_interface_types": sorted(core_interface_types),
@@ -1304,9 +1304,9 @@ def render_summary(prevalence: dict, identity: dict, pattern_set: PatternSet) ->
         "", "## Interface identity gate", "",
         f"- Interface rows: {identity['total_interface_rows']}",
         f"- Row status counts: `{json_text(identity['row_status_counts'])}`",
-        f"- Production-resolved investors: {identity['production_resolved_investors']}",
+        f"- Canonically resolved investors: {identity['canonical_resolved_investors']}",
         f"- Investors eligible for behavior-mode discovery gate: {identity['mode_discovery_eligible_investors']}", "",
-        "Only production-resolved investor IDs enter the primary investor profile. Normalized-exact candidates are reported for sensitivity and do not overwrite production identity; normalization collisions remain unresolved.", "",
+        "Only canonically resolved investor IDs enter the primary investor profile. Normalized-exact candidates are reported for sensitivity and do not overwrite canonical identity; normalization collisions remain unresolved.", "",
     ]
     return "\n".join(lines)
 
@@ -1538,9 +1538,9 @@ def main() -> None:
                 "signature_flags_role": "primary Pattern presence for average action value",
                 "strict_primary_role": "diagnostic feature only",
                 "outcome_investor_count": "unique non-empty raw names; resolved-ID fallback only when raw names empty",
-                "investor_primary_view": "production_resolved_only",
+                "investor_primary_view": "canonical_resolved_only",
                 "investor_mode_gate": ">=5 core events and >=3 companies",
-                "production_chain_window_semantics": {
+                "chain_window_semantics": {
                     "later_dated_chains": "[start,end)",
                     "first_dated_chain": "founding sentinel means all dated events before end",
                     "unknown_end_date": "no middle events",
@@ -1558,7 +1558,7 @@ def main() -> None:
 
     print(f"chains: {len(chain_features)}")
     print(f"scope companies: {len(company_profiles)}")
-    print(f"production-resolved interface investors: {len(investor_profiles)}")
+    print(f"canonically resolved interface investors: {len(investor_profiles)}")
     print(f"wrote: {output_dir}")
 
 

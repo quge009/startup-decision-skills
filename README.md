@@ -5,7 +5,7 @@
 <h1 align="center">Startup Decision Skills</h1>
 
 <p align="center">
-  <strong>Reusable Agent Skills for evidence-grounded startup evaluation and investor-behavior research.</strong>
+  <strong>Evidence-grounded workflows for startup evaluation and investor event-chain research.</strong>
 </p>
 
 <p align="center">
@@ -14,16 +14,16 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E" alt="MIT license"></a>
 </p>
 
-Thirteen composable skills turn startup proposals and public-source records
-into structured candidate cards, time-bounded evidence checks, canonical
-entities, event chains, and auditable retrospective patterns.
+Thirteen composable Agent Skills turn a startup proposal into an auditable
+evaluation—or turn public-source company records into canonical event chains
+for retrospective investor-behavior research.
 
 ## What you can do
 
 | Research workflow | Start with | Result |
 |---|---|---|
-| **Paper Part I — Startup proposal evaluation** | [`evaluate-proposal`](skills/evaluate-proposal/) | An evidence-grounded proposal verdict with an auditable market and moat assessment |
-| **Paper Part II — Investor and event-chain evaluation** | [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Canonical investment relationships, event chains, patterns, and post-investment behavior summaries |
+| **Paper Part I — Startup proposal evaluation** | [`evaluate-proposal`](skills/evaluate-proposal/) | Candidate profile, market and moat checks, score, and reasoned verdict |
+| **Paper Part II — Investor and event-chain evaluation** | [`portfolio-edge-builder`](skills/portfolio-edge-builder/) | Canonical entities, source-grounded events, ordered chains, and descriptive analyses |
 
 ## How it works
 
@@ -35,10 +35,11 @@ Proposal → Candidate profile
 
 Paper Part II
 Public sources → Portfolio edges → Canonical entities → Event evidence
-                                                            ├→ Funding + exposure events ───┐
-                                                            └→ Interface identity resolution ─┴→ Event chains
-                                                                                                  ├→ Patterns
-                                                                                                  └→ Post-investment behavior
+                                                   ├→ Funding events ───────────┐
+                                                   ├→ Exposure events ──────────┤
+                                                   └→ Interface events → Review ┴→ Event chains
+                                                                                   ├→ Patterns
+                                                                                   └→ Investor behavior
 ```
 
 The collection covers both sides of a startup decision:
@@ -49,27 +50,35 @@ The collection covers both sides of a startup decision:
 
 ## Start here
 
-Choose the smallest skill that matches the task. Use
-[`evaluate-proposal`](skills/evaluate-proposal/) for the complete Part I
-workflow; install its component skills directly when you need only one stage.
+Clone the repository, then copy either the complete collection or only the
+skills required by your workflow into your agent runtime's skill directory.
 
 ```bash
 git clone https://github.com/quge009/startup-decision-skills.git
-# Install the complete collection:
+
+# Codex: install the complete collection
+mkdir -p ~/.codex/skills
+cp -R startup-decision-skills/skills/. ~/.codex/skills/
+
+# Claude Code: install the complete collection
 mkdir -p ~/.claude/skills
 cp -R startup-decision-skills/skills/. ~/.claude/skills/
-
-# Or install only the proposal-evaluation workflow:
-cp -r startup-decision-skills/skills/evaluate-proposal ~/.claude/skills/
-cp -r startup-decision-skills/skills/candidate-profiler ~/.claude/skills/
-cp -r startup-decision-skills/skills/market-check ~/.claude/skills/
-cp -r startup-decision-skills/skills/moat-check ~/.claude/skills/
 ```
 
-Each folder follows the [Agent Skills](https://agentskills.io) convention: a
-required `SKILL.md` plus only the scripts, references, schemas, and examples the
-workflow needs. Install folders in the skill directory supported by your agent
-runtime.
+For a minimal Part I installation in Codex:
+
+```bash
+cp -r startup-decision-skills/skills/evaluate-proposal ~/.codex/skills/
+cp -r startup-decision-skills/skills/candidate-profiler ~/.codex/skills/
+cp -r startup-decision-skills/skills/market-check ~/.codex/skills/
+cp -r startup-decision-skills/skills/moat-check ~/.codex/skills/
+```
+
+Each directory follows the [Agent Skills](https://agentskills.io) convention:
+`SKILL.md` defines when and how to use the skill, while bundled scripts,
+references, schemas, and examples support execution. Start with the workflow
+skill when you want orchestration; install a component directly when you need
+only one stage.
 
 ## Skill catalog
 
@@ -109,12 +118,15 @@ runtime.
 3. [`event-evidence-collector`](skills/event-evidence-collector/) — **Collect
    event evidence.** Produce source-grounded funding, exposure, and Interface
    claims.
-4. [`interface-identity-resolution`](skills/interface-identity-resolution/) —
-   **Resolve Interface counterparties.** Attach reviewed investor or associated
-   identities to Interface claims.
-5. [`event-chain-builder`](skills/event-chain-builder/) — **Build ordered event
-   chains.** Resolve claims and materialize funding, exposure, Interface, and
-   chain tables.
+4. [`event-chain-builder`](skills/event-chain-builder/) — **Materialize event
+   tables.** Resolve claims and build funding, exposure, and raw Interface
+   tables from the collected evidence.
+5. [`interface-identity-resolution`](skills/interface-identity-resolution/) —
+   **Resolve Interface counterparties.** Review raw Interface records and
+   materialize identity-resolved Interface v0.4.
+
+After identity review, return the v0.4 Interface table to
+`event-chain-builder` for final chain materialization.
 
 #### Event-chain analysis
 
@@ -129,8 +141,8 @@ within event chains**. They are not labels assigned to companies.
 
 ## Requirements
 
-Several skills use only the Python standard library. Install optional packages
-for the workflows you plan to run:
+Install the repository requirements, or only the packages needed by your
+selected workflow:
 
 | Workflow | Packages |
 |---|---|
@@ -142,33 +154,33 @@ for the workflows you plan to run:
 pip install -r requirements.txt
 ```
 
-LLM-guided skills require a compatible agent runtime. `market-check` and
-`moat-check` require `TAVILY_API_KEY`. `event-evidence-collector` requires
-`OPENROUTER_API_KEY` plus `TAVILY_API_KEY`, or `SERPER_API_KEY` when selecting
-the optional Serper backend. `OPENROUTER_MODEL` and `OPENROUTER_URL` may override
-the endpoint defaults. Credentials must be supplied through the environment and
-must never be stored in this repository.
+`market-check` and `moat-check` require `TAVILY_API_KEY`.
+`event-evidence-collector` requires `OPENROUTER_API_KEY` plus
+`TAVILY_API_KEY`, or `SERPER_API_KEY` for the optional Serper backend.
+`OPENROUTER_MODEL` and `OPENROUTER_URL` can override the default model and
+endpoint. Supply credentials through the environment; never store them in the
+repository.
 
 ## Dataset
 
-The companion [EventChain dataset](https://huggingface.co/datasets/quge007/eventchain)
-contains the released entities, provenance, events, and chain tables. See
-[`datasets-index.md`](datasets-index.md) for scope and licensing boundaries.
+Use the companion [EventChain dataset](https://huggingface.co/datasets/quge007/eventchain)
+to explore the released entities, provenance, events, and chain tables without
+reconstructing the source data. [`datasets-index.md`](datasets-index.md) maps
+each research task to its required tables.
 
 ## Scope and validation
 
 These skills package the methods used in the companion research. They are
 research tools, not investment advice, and they do not guarantee complete
-coverage of private company activity. Deterministic scripts validate schemas
-and fail loudly on contract violations; LLM- and web-dependent outputs still
-require source review.
+coverage of private company activity. Deterministic processing stages validate
+their schema contracts; LLM- and web-dependent outputs still require source
+review.
 
-Before release, all 13 skills pass structural validation and workflow-level
-smoke tests. All 52 bundled Python files pass syntax checks, and their command
-interfaces pass CLI checks.
-Repeated schema contracts and shared helpers are hash-checked for consistency.
-Long procedures use progressive disclosure through each skill's referenced
-workflow documentation.
+The release suite covers all 13 skills and 52 bundled Python files with
+structural checks, syntax and CLI checks, offline functional tests, and
+workflow-level acceptance scenarios. Repeated schema contracts and shared
+helpers are hash-checked for consistency. Long procedures use progressive
+disclosure through each skill's referenced workflow documentation.
 
 ## License
 

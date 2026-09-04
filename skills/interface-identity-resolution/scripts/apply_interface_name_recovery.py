@@ -2,7 +2,7 @@
 """Validate and materialize the Interface raw-investor-name recovery overlay.
 
 This is an offline, fail-closed materializer.  It never edits its inputs and it
-only publishes new artifacts below /tmp.  The adjudication itself lives in a
+only publishes new artifacts without overwriting inputs. The adjudication itself lives in a
 separate versioned overlay package; this script does not infer investor names.
 """
 
@@ -50,7 +50,6 @@ SOURCE_PAGE_QUOTE_SEMANTICS = (
 )
 NETWORK_ACCESS = "none"
 REQUIRED_PYARROW_VERSION = "25.0.0"
-TMP_ROOT = Path("/tmp")
 PARQUET_WRITE_OPTIONS = {
     "compression": "snappy",
     "version": "2.6",
@@ -491,21 +490,9 @@ def _canonical_path(path: Path) -> Path:
     return path.expanduser().resolve(strict=False)
 
 
-def _require_tmp_output(path: Path, label: str) -> None:
-    canonical = _canonical_path(path)
-    try:
-        canonical.relative_to(TMP_ROOT)
-    except ValueError as error:
-        raise ValueError(f"{label} must be below /tmp: {path}") from error
-    if canonical == TMP_ROOT:
-        raise ValueError(f"{label} must be a file below /tmp")
-
-
 def _validate_paths(inputs: dict[str, Path], outputs: dict[str, Path]) -> None:
     canonical_inputs = {name: _canonical_path(path) for name, path in inputs.items()}
     canonical_outputs = {name: _canonical_path(path) for name, path in outputs.items()}
-    for name, path in outputs.items():
-        _require_tmp_output(path, name)
     if len(set(canonical_outputs.values())) != len(canonical_outputs):
         raise ValueError("output targets alias each other")
     aliases = set(canonical_inputs.values()) & set(canonical_outputs.values())
