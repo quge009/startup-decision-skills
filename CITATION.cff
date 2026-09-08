@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use these skills, please cite the software and its companion paper."
+title: "Startup Decision Skills"
+type: software
+authors:
+  - family-names: Qu
+    given-names: Lei
+version: 0.9.0
+date-released: 2026-09-03
+license: MIT
+repository-code: "https://github.com/quge009/startup-decision-skills"
+url: "https://github.com/quge009/startup-decision-skills"
+preferred-citation:
+  type: article
+  title: "From Ideas to Actions: A Public-Data Decision-Support Toolchain Across the Venture Lifecycle"
+  authors:
+    - family-names: Qu
+      given-names: Lei
+  year: 2026

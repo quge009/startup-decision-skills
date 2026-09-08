@@ -168,6 +168,11 @@ to explore the released entities, provenance, events, and chain tables without
 reconstructing the source data. [`datasets-index.md`](datasets-index.md) maps
 each research task to its required tables.
 
+The companion manuscript is *From Ideas to Actions: A Public-Data
+Decision-Support Toolchain Across the Venture Lifecycle* (arXiv and SSRN links
+will be added after submission). Citation metadata is provided in
+[`CITATION.cff`](CITATION.cff).
+
 ## Scope and validation
 
 These skills package the methods used in the companion research. They are
