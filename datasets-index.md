@@ -4,8 +4,9 @@ Self-produced datasets from the business-predictive-model research are
 published on Hugging Face. This index links each release to its HF dataset
 card.
 
-Companion paper: [From Ideas to Actions: A Public-Data Decision-Support Toolchain
-Across the Venture Lifecycle](https://ssrn.com/abstract=7445800) (SSRN).
+Companion paper: *From Ideas to Actions: A Public-Data Decision-Support Toolchain
+Across the Venture Lifecycle*.
+[SSRN](https://ssrn.com/abstract=7445800) | [arXiv](https://arxiv.org/abs/2609.15219).
 
 ## Part 2 — Post-investment behavior (investor_behavior_analysis)
 

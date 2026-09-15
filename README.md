@@ -168,9 +168,10 @@ to explore the released entities, provenance, events, and chain tables without
 reconstructing the source data. [`datasets-index.md`](datasets-index.md) maps
 each research task to its required tables.
 
-The companion paper is [*From Ideas to Actions: A Public-Data
-Decision-Support Toolchain Across the Venture Lifecycle*](https://ssrn.com/abstract=7445800),
-available on SSRN. An arXiv link will be added when available. Citation metadata is provided in
+The companion paper is *From Ideas to Actions: A Public-Data
+Decision-Support Toolchain Across the Venture Lifecycle*.
+Paper: [SSRN](https://ssrn.com/abstract=7445800) | [arXiv](https://arxiv.org/abs/2609.15219).
+Citation metadata is provided in
 [`CITATION.cff`](CITATION.cff).
 
 ## Scope and validation

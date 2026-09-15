@@ -17,4 +17,16 @@ preferred-citation:
     - family-names: Qu
       given-names: Lei
   year: 2026
-  url: "https://ssrn.com/abstract=7445800"
+  identifiers:
+    - type: url
+      value: "https://ssrn.com/abstract=7445800"
+      description: "SSRN paper entry"
+    - type: url
+      value: "https://arxiv.org/abs/2609.15219"
+      description: "arXiv paper entry"
+    - type: doi
+      value: "10.2139/ssrn.7445800"
+      description: "SSRN version of the companion paper"
+    - type: doi
+      value: "10.48550/arXiv.2609.15219"
+      description: "arXiv version of the companion paper"
